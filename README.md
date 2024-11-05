@@ -1,5 +1,5 @@
 # TC2008B.301 - Proyecto Multiagentes
-**Autores**: *Carlos Yair Herrera Rodríguez, Alma Teresa Carpio Revilla, Andrés Cabrera Alvarado, Mariana Marzayani Hernández Jurado*.
+**Autores**: *Carlos Yahir Herrera Rodríguez, Alma Teresa Carpio Revilla, Andrés Cabrera Alvarado, Mariana Marzayani Hernández Jurado*.
 
 ## Proposito
 Establecer un reto de programación y control de agentes.
