@@ -1851,7 +1851,7 @@ GameObject:
   - component: {fileID: 6427437806661361604}
   - component: {fileID: 4467725925571892963}
   m_Layer: 0
-  m_Name: carro
+  m_Name: carro Carlos Herrera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
