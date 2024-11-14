@@ -1,5 +1,0 @@
-Asset Licenses
-Extension Asset
-One license required for each individual use
-
-https://unity.com/legal/as-terms 
