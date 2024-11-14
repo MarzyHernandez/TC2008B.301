@@ -48,7 +48,7 @@ MonoBehaviour:
   m_MinSize: {x: 300, y: 100}
   m_MaxSize: {x: 24288, y: 16192}
   vertical: 0
-  controlID: 77
+  controlID: 46
   draggingID: 0
 --- !u!114 &3
 MonoBehaviour:
@@ -224,7 +224,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 16192}
   vertical: 1
-  controlID: 78
+  controlID: 47
   draggingID: 0
 --- !u!114 &10
 MonoBehaviour:
@@ -250,7 +250,7 @@ MonoBehaviour:
   m_MinSize: {x: 200, y: 50}
   m_MaxSize: {x: 16192, y: 8096}
   vertical: 0
-  controlID: 79
+  controlID: 48
   draggingID: 0
 --- !u!114 &11
 MonoBehaviour:
@@ -322,9 +322,9 @@ MonoBehaviour:
     m_SceneHandles: 
     m_ShowAllHits: 0
     m_SkipHidden: 0
-    m_SearchArea: 1
+    m_SearchArea: 0
     m_Folders:
-    - Assets/POLYGON city pack/Prefabs/Buildings
+    - Assets/Coches/Coche2
     m_Globs: []
     m_OriginalText: 
     m_ImportLogFlags: 0
@@ -332,17 +332,17 @@ MonoBehaviour:
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets/POLYGON city pack/Prefabs/Buildings
+  - Assets/Coches/Coche2
   m_LastFoldersGridSize: -1
   m_LastProjectPath: C:\Users\carlo\Documents\GitHub\Repo_SMA\TC2008B.301\Unity\Proyecto
     SMA
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 67.79999}
-    m_SelectedIDs: d2890000
-    m_LastClickedID: 35282
-    m_ExpandedIDs: 00000000f2870000f4870000f8870000fa8700005c8800009a88000000ca9a3bffffff7f
+    scrollPos: {x: 0, y: 0}
+    m_SelectedIDs: d47e0000
+    m_LastClickedID: 32468
+    m_ExpandedIDs: 00000000b67a0000b87a0000ba7a0000bc7a0000367b00006a7b000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -370,7 +370,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000f2870000f4870000f6870000f8870000fa870000
+    m_ExpandedIDs: 00000000b67a0000b87a0000ba7a0000bc7a0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -422,7 +422,7 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
     m_NewAssetIndexInList: -1
-    m_ScrollPosition: {x: 0, y: 28}
+    m_ScrollPosition: {x: 0, y: 0}
     m_GridSize: 64
   m_SkipHiddenPackages: 0
   m_DirectoriesAreaWidth: 207
@@ -512,7 +512,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: eaacffff12bafffffac0ffff3ac8fffffacbffff6ccfffff44d1ffffdad4ffffd6d9ffff1aecffff76ecffff50edffffc6f4fffff4faffff8a63000068660000c2670000a4680000366a0000
+      m_ExpandedIDs: 2efbffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -866,9 +866,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: -331.63397, y: -231.82704, z: 130.53764}
+    m_Target: {x: 569.77185, y: -393.2348, z: 256.76315}
     speed: 2
-    m_Value: {x: -331.63397, y: -231.82704, z: 130.53764}
+    m_Value: {x: 569.77185, y: -393.2348, z: 256.76315}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -914,13 +914,13 @@ MonoBehaviour:
     m_GridAxis: 1
     m_gridOpacity: 0.5
   m_Rotation:
-    m_Target: {x: 0.69403034, y: -0.010883626, z: 0.011182483, w: 0.720341}
+    m_Target: {x: 0.3299176, y: 0.42815194, z: -0.17068174, w: 0.8243465}
     speed: 2
-    m_Value: {x: 0.69461197, y: -0.010865762, z: 0.011191009, w: 0.7192154}
+    m_Value: {x: 0.33817858, y: 0.41008303, z: -0.16631442, w: 0.830546}
   m_Size:
-    m_Target: 235.57367
+    m_Target: 331.3229
     speed: 2
-    m_Value: 225.42935
+    m_Value: 346.93497
   m_Ortho:
     m_Target: 0
     speed: 2
