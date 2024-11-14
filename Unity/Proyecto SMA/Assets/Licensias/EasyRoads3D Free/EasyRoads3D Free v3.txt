@@ -1,0 +1,23 @@
+*License agreement:
+Standard Unity Asset Store EULA - https://unity.com/legal/as-terms
+
+*License type:
+Asset Licenses
+
+*Extension Asset:
+One license required for each individual use
+
+*File size:
+5.8MB
+
+*Latest Versión:
+v3.2.4f3
+
+*Latest reléase date:
+Oct 19, 2024
+
+*Original Unity versión:
+2018.3.0 or higher
+
+*Support:
+Visit site - https://www.easyroads3d.com/

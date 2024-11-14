@@ -1,0 +1,23 @@
+*License agreement:
+Standard Unity Asset Store EULA - https://unity.com/legal/as-terms
+
+*License type:
+Asset Licenses
+
+*Extension Asset:
+One license required for each individual use
+
+*File size:
+129.9MB
+
+*Latest Versión:
+16.5
+
+*Latest reléase date:
+Oct 13, 2024
+
+*Original Unity versión:
+2021.3.0 or higher
+
+*Support:
+Visit site - https://render-knight.com/
