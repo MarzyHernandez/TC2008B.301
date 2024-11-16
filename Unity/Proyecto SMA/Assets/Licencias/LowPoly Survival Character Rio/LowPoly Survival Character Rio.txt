@@ -1,0 +1,23 @@
+*License agreement:
+Standard Unity Asset Store EULA - https://unity.com/legal/as-terms
+
+*License type:
+Asset Licenses
+
+*Extension Asset:
+One license required for each individual use
+
+*File size:
+6.6MB
+
+*Latest Versión:
+2.0
+
+*Latest reléase date:
+Jun 14, 2024
+
+*Original Unity versión:
+2022.3.13 or higher
+
+*Support:
+Visit site - https://vertexmodeler.com/
