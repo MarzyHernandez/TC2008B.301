@@ -94,7 +94,7 @@ def get_lights():
 
             # Devolver el estado (color) y la posición de cada semáforo
             traffic_lights.append({
-                "id": f"{agent.state}_{x}_{y}",  # Identificador único para cada semáforo por estado y posición
+                "id": f"{agent.state}{x}{y}",  # Identificador único para cada semáforo por estado y posición
                 "position": [x, y],
                 "color": agent.state  # El color del semáforo (green, yellow, red)
             })
@@ -148,10 +148,14 @@ def get_peaton_escalado():
 
     return jsonify(pedestrians)
 
+# cada que se vuelve a hacer una llamada es un step
 @app.route('/getCarrosEscalado', methods=['GET'])
 def get_carros_escalado():
     if model is None:
         create_model()
+
+    # Avanzar un paso en la simulación para que las posiciones estén actualizadas
+    model.step()
 
     # Recuperar las posiciones de los autos y escalar
     cars_positions = []
