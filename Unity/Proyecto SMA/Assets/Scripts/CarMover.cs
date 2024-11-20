@@ -91,7 +91,7 @@ public class CarMover : MonoBehaviour
     private IEnumerator RotateAndMoveCar(GameObject car, Vector3 direction, Vector3 target)
     {
         // Velocidad de rotación
-        float rotationSpeed = 360f; // Rotar 360 grados por segundo
+        float rotationSpeed = 100f; // Rotar 360 grados por segundo
         Quaternion targetRotation = Quaternion.LookRotation(direction);
 
         // Rotamos el carro hacia la nueva dirección rápidamente (en un segundo)
