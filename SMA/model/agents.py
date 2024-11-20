@@ -1,8 +1,6 @@
-# agents.py
-
 from mesa import Agent
 import random
-from map import PARKINGS, DIRECTIONS 
+from map.map import PARKINGS, DIRECTIONS
 
 class CarAgent(Agent):
     COLORS = ["blue", "orange", "purple", "pink", "cyan"]  
@@ -122,7 +120,101 @@ class CarAgent(Agent):
         print(f"Posición actual del auto: {self.pos}")
         self.move()
 
-# Agente semáforo
+        
+class PedestrianAgent(Agent):
+    def __init__(self, unique_id, model, color="orange"):
+        super().__init__(unique_id, model)
+        self.color = color
+        self.is_crossing = False  # Bandera para indicar si está cruzando un semáforo
+        self.crossing_path = []  # Guardar las celdas del camino de cruce
+        self.last_position = None  # Almacena la última posición
+
+    def within_grid(self, pos):
+        x, y = pos
+        return 0 <= x < self.model.grid.width and 0 <= y < self.model.grid.height
+
+    def is_valid_sidewalk(self, pos):
+        return pos in self.model.sidewalk_positions
+
+    def can_cross(self, current_pos, next_pos):
+        """
+        Verifica si el peatón puede cruzar un semáforo hacia un edificio.
+        """
+        # Si ya está cruzando, permite continuar
+        if self.is_crossing:
+            return True
+
+        # Verificar si la posición actual está en un semáforo
+        current_agents = self.model.grid.get_cell_list_contents(current_pos)
+        if not any(isinstance(agent, TrafficLightAgent) for agent in current_agents):
+            return False  # Solo puede cruzar si está en un semáforo
+
+        # Calcular la posición del edificio más allá del segundo semáforo
+        x1, y1 = current_pos
+        x2, y2 = next_pos
+        building_pos = (x2 + (x2 - x1), y2 + (y2 - y1))  # Celda al otro lado del segundo semáforo
+
+        # Verificar si la celda más allá es un edificio
+        if building_pos in self.model.building_positions:
+            self.crossing_path = [next_pos, building_pos]  # Guardar camino directo
+            return True
+
+        return False
+
+    def get_valid_moves(self):
+        """
+        Calcula los movimientos válidos, excluyendo la posición anterior.
+        """
+        x, y = self.pos
+        possible_moves = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+        valid_moves = []
+
+        for move in possible_moves:
+            if not self.within_grid(move):
+                continue
+            if move == self.last_position:  # Evitar retroceder
+                continue
+            if self.is_valid_sidewalk(move) or self.can_cross(self.pos, move):
+                valid_moves.append(move)
+
+        return valid_moves
+
+    def move(self):
+        valid_moves = self.get_valid_moves()
+        if valid_moves:
+            chosen_move = random.choice(valid_moves)
+
+            # Verificar si comenzó a cruzar un semáforo
+            if self.crossing_path and chosen_move in self.crossing_path:
+                self.is_crossing = True  # Marcar como cruzando
+
+            # Actualizar la posición anterior antes de mover
+            self.last_position = self.pos
+
+            # Mover al peatón
+            self.model.grid.move_agent(self, chosen_move)
+            print(f"Peatón moviéndose a: {chosen_move}")
+
+            # Si terminó el cruce, reiniciar bandera y camino
+            if self.crossing_path and chosen_move == self.crossing_path[-1]:
+                self.is_crossing = False
+                self.crossing_path = []  # Reiniciar el camino de cruce
+        else:
+            print(f"Peatón {self.unique_id} en {self.pos} no tiene movimientos válidos.")
+
+    def step(self):
+        if self.model.schedule.steps % 2 == 0:  # Moverse cada 2 pasos
+            self.move()
+
+        # Imprimir si está dentro de un edificio o en una banqueta
+        if self.pos in self.model.sidewalk_positions:
+            print(f"Peatón {self.unique_id} está en una banqueta en {self.pos}.")
+        elif self.pos in self.model.building_positions:
+            print(f"Peatón {self.unique_id} está dentro de un edificio en {self.pos}.")
+        else:
+            print(f"Peatón {self.unique_id} está en una posición desconocida en {self.pos}.")
+
+
 class TrafficLightAgent(Agent):
     def __init__(self, unique_id, model, position, green_time=10, yellow_time=3, red_time=10, is_green=True):
         super().__init__(unique_id, model)
@@ -133,7 +225,6 @@ class TrafficLightAgent(Agent):
         self.state = "green" if is_green else "red"
         self.timer = self.green_time if is_green else self.red_time
 
-    # Cambio de color del semáforo
     def change_color(self):
         if self.state == "green":
             self.state = "yellow"
@@ -150,7 +241,7 @@ class TrafficLightAgent(Agent):
         if self.timer <= 0:
             self.change_color()
 
-# Edificios, estacionamientos y glorieta para el mapa
+
 class StaticAgent(Agent):
     def __init__(self, unique_id, model, agent_type, color):
         super().__init__(unique_id, model)

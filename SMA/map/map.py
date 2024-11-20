@@ -494,3 +494,19 @@ TRAFFIC_LIGHTS_GREEN = [
 # Coordenadas de la glorieta (café)
 GLORIETA = [(14 - 1, invert_y(14 - 1)), (15 - 1, invert_y(14 - 1)), (14 - 1, invert_y(15 - 1)), (15 - 1, invert_y(15 - 1))]
 
+
+def calculate_sidewalks(buildings):
+    sidewalks = set()
+    building_set = set(buildings)
+
+    for (x, y) in buildings:
+        # Verifica si hay al menos una celda adyacente fuera del área de edificios
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            neighbor = (x + dx, y + dy)
+            if neighbor not in building_set:  # La celda es parte del perímetro interno
+                sidewalks.add((x, y))
+                break  # Ya sabemos que esta celda es una banqueta, no es necesario seguir
+    return list(sidewalks)
+
+# Calcular las banquetas (dentro del área de edificios)
+SIDEWALKS = calculate_sidewalks(BUILDINGS)

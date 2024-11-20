@@ -1,22 +1,28 @@
-# model.py
-
 import random
 from mesa import Model
 from mesa.time import SimultaneousActivation
 from mesa.space import MultiGrid
-from agents import CarAgent, TrafficLightAgent, StaticAgent
-from map import BUILDINGS, PARKINGS, TRAFFIC_LIGHTS_RED, TRAFFIC_LIGHTS_GREEN, GLORIETA
+from model.agents import CarAgent, PedestrianAgent, TrafficLightAgent, StaticAgent
+from map.map import BUILDINGS, SIDEWALKS, PARKINGS, TRAFFIC_LIGHTS_RED, TRAFFIC_LIGHTS_GREEN, GLORIETA
 
 class TrafficModel(Model):
-    def __init__(self, width, height, agent_configs):
+    def __init__(self, width, height, agent_configs, num_pedestrians=5):
         super().__init__()
         self.grid = MultiGrid(width, height, torus=False)
         self.schedule = SimultaneousActivation(self)
+        self.sidewalk_positions = SIDEWALKS  # Añadir banquetas al modelo
 
         # Agregar edificios
         for i, pos in enumerate(BUILDINGS):
             building = StaticAgent(f"building_{i}", self, "building", "gray")
             self.grid.place_agent(building, pos)
+
+        # Agregar peatones
+        for i in range(num_pedestrians):
+            random_sidewalk = random.choice(self.sidewalk_positions)
+            pedestrian = PedestrianAgent(self.next_id(), self, color="gray")
+            self.grid.place_agent(pedestrian, random_sidewalk)
+            self.schedule.add(pedestrian)
 
         # Agregar estacionamientos
         for pos, number in PARKINGS.items():
@@ -40,16 +46,18 @@ class TrafficModel(Model):
             self.schedule.add(traffic_light)
             self.grid.place_agent(traffic_light, pos)
 
-        # Configurar agentes 
+        # Configurar agentes de carros
         for i, (start_pos, dest_pos) in enumerate(agent_configs):
             car = CarAgent(self.next_id(), self, destination=dest_pos, color_index=i)
             self.schedule.add(car)
             self.grid.place_agent(car, start_pos)
 
-            start_parking_number = PARKINGS[start_pos]
-            destination_parking_number = PARKINGS[dest_pos]
-            print(f"Carro {i+1} iniciado en estacionamiento {start_parking_number} ({start_pos}), destino: estacionamiento {destination_parking_number} ({dest_pos}), color: {car.color}")
+        # Configurar agentes peatones
+        for i in range(num_pedestrians):
+            random_building = random.choice(BUILDINGS)
+            pedestrian = PedestrianAgent(self.next_id(), self)
+            self.schedule.add(pedestrian)
+            self.grid.place_agent(pedestrian, random_building)
 
     def step(self):
         self.schedule.step()
-
