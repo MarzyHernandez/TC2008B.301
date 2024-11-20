@@ -153,7 +153,8 @@ def get_carros_escalado():
     if model is None:
         create_model()
 
-    # Recuperar las posiciones de los autos y escalar
+    model.step()
+
     cars_positions = []
 
     for agent in model.schedule.agents:
@@ -171,6 +172,8 @@ def get_carros_escalado():
             cars_positions.append(car_data)
 
     return jsonify(cars_positions)
+
+
 
 
 
