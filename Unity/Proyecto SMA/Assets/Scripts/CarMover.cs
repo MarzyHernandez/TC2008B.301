@@ -90,38 +90,30 @@ public class CarMover : MonoBehaviour
 
     private IEnumerator RotateAndMoveCar(GameObject car, Vector3 direction, Vector3 target)
     {
-        // Velocidad de rotación
-        float rotationSpeed = 100f; // Rotar 360 grados por segundo
+        // Primero, rotamos el carro hacia la nueva dirección
+        float rotationSpeed = 500f; // Velocidad de rotación
         Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-        // Rotamos el carro hacia la nueva dirección rápidamente (en un segundo)
-        float rotationTime = 1f; // Tiempo para rotar
-        float elapsedRotationTime = 0f;
-        Quaternion startRotation = car.transform.rotation;
-
-        while (elapsedRotationTime < rotationTime)
+        
+        // Rotamos el carro de manera rápida hacia la dirección deseada
+        while (Quaternion.Angle(car.transform.rotation, targetRotation) > 1f)
         {
-            car.transform.rotation = Quaternion.RotateTowards(startRotation, targetRotation, rotationSpeed * Time.deltaTime);
-            elapsedRotationTime += Time.deltaTime;
+            car.transform.rotation = Quaternion.RotateTowards(car.transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             yield return null;
         }
 
-        // Aseguramos que la rotación finaliza correctamente
-        car.transform.rotation = targetRotation;
+        // Luego, movemos el carro hacia la nueva posición
+        float movementSpeed = 100f; // Velocidad de movimiento hacia la posición
+        Vector3 currentPosition = car.transform.position;
 
-        // Movimiento hacia la nueva posición en 1 segundo
-        float movementTime = 1f; // Tiempo para mover
-        float elapsedMoveTime = 0f;
-        Vector3 startPosition = car.transform.position;
-
-        while (elapsedMoveTime < movementTime)
+        // Mover el carro hacia la nueva posición en 1 segundo
+        while (Vector3.Distance(currentPosition, target) > 1f)
         {
-            car.transform.position = Vector3.Lerp(startPosition, target, elapsedMoveTime / movementTime);
-            elapsedMoveTime += Time.deltaTime;
+            currentPosition = Vector3.MoveTowards(currentPosition, target, movementSpeed * Time.deltaTime);
+            car.transform.position = currentPosition;
             yield return null;
         }
 
-        // Aseguramos que el carro llegue exactamente a la nueva posición
+        // Asegurarse de que el carro llegue exactamente a la posición
         car.transform.position = target;
     }
 }
