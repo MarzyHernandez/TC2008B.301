@@ -178,6 +178,8 @@ def get_carros_escalado():
 
 
 
+
+
 def get_scaled_position(agent):
     """
     Lógica para escalar la posición del peatón según las celdas adyacentes 'blancas'.
