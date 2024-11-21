@@ -1,133 +1,212 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking; // Para realizar peticiones HTTP
+using UnityEngine.Networking;
 
 public class CarMover : MonoBehaviour
 {
-    public GameObject carPrefab; // Asigna el prefab del auto en el inspector
-    private List<GameObject> cars = new List<GameObject>();
-    private string endpointUrl = "http://127.0.0.1:5003/getCarrosEscalado"; // Cambia por tu endpoint
-    private Dictionary<int, Vector3> carPositions = new Dictionary<int, Vector3>();
+    private const string API_URL = "http://127.0.0.1:5003/getCarrosEscalado";
+    public GameObject carPrefab; // Prefab asignado desde el inspector
+    private Dictionary<int, GameObject> cars = new Dictionary<int, GameObject>();
+    private bool isFirstCall = true;
 
-    private void Start()
+    private float moveSpeed = 50f;
+    private float rotationDuration = 0.3f; // Duración fija de la rotación en segundos
+
+    void Start()
     {
-        StartCoroutine(UpdateCarDataPeriodically());
+        StartCoroutine(UpdateCarPositions());
     }
 
-    private IEnumerator UpdateCarDataPeriodically()
+    IEnumerator UpdateCarPositions()
     {
         while (true)
         {
-            yield return StartCoroutine(LoadCarData());
-            yield return new WaitForSeconds(1f); // Llama a la API cada segundo
+            using (UnityWebRequest request = UnityWebRequest.Get(API_URL))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    string jsonResponse = request.downloadHandler.text;
+
+                    if (!string.IsNullOrEmpty(jsonResponse))
+                    {
+                        CarDataListWrapper carDataWrapper = JsonUtility.FromJson<CarDataListWrapper>($"{{\"cars\":{jsonResponse}}}");
+                        foreach (var car in carDataWrapper.cars)
+                        {
+                            Vector3 position = new Vector3(car.position[0], 0f, car.position[1]);
+
+                            if (isFirstCall)
+                            {
+                                if (!cars.ContainsKey(car.id))
+                                {
+                                    GameObject newCar = InstantiateCar(car.id, position);
+                                    cars.Add(car.id, newCar);
+                                    Debug.Log($"Carro {car.id} inicializado en posición: {position}");
+                                }
+                            }
+                            else
+                            {
+                                if (cars.ContainsKey(car.id))
+                                {
+                                    cars[car.id].GetComponent<CarController>().SetDestination(position);
+                                    Debug.Log($"Carro {car.id} actualizado a nueva posición objetivo: {position}");
+                                }
+                            }
+                        }
+
+                        if (isFirstCall) isFirstCall = false;
+                    }
+                }
+                else
+                {
+                    Debug.LogError("Error fetching car positions: " + request.error);
+                }
+            }
+
+            yield return new WaitForSeconds(0.5f); // Llamada al API cada medio segundo
         }
     }
 
-    private IEnumerator LoadCarData()
+    private GameObject InstantiateCar(int id, Vector3 initialPosition)
     {
-        using (UnityWebRequest request = UnityWebRequest.Get(endpointUrl))
-        {
-            yield return request.SendWebRequest();
+        GameObject car = Instantiate(carPrefab); // Crear una instancia del prefab
+        car.name = "Car_" + id;
 
-            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError($"Error fetching car data: {request.error}");
-            }
-            else
-            {
-                string jsonData = request.downloadHandler.text;
-                UpdateCarPositions(jsonData);
-            }
-        }
-    }
+        CarController controller = car.AddComponent<CarController>();
+        controller.Initialize(initialPosition, moveSpeed, rotationDuration);
 
-    private void UpdateCarPositions(string jsonData)
-    {
-        // Parsear el JSON a una lista de objetos
-        List<CarData> carDataList = JsonUtility.FromJson<CarDataWrapper>($"{{\"cars\": {jsonData}}}").cars;
-
-        foreach (CarData data in carDataList)
-        {
-            Vector3 newPosition = new Vector3(data.position[0], 0, data.position[1]);
-
-            if (!carPositions.ContainsKey(data.id))
-            {
-                // Si es un auto nuevo, crearlo
-                GameObject car = Instantiate(carPrefab, newPosition, Quaternion.identity);
-                car.name = $"Car_{data.id}";
-                cars.Add(car);
-                carPositions[data.id] = newPosition;
-            }
-            else
-            {
-                // Actualizar posición del auto existente
-                carPositions[data.id] = newPosition;
-            }
-        }
-    }
-
-    private void Update()
-    {
-        // Actualizar posiciones en cada frame
-        foreach (GameObject car in cars)
-        {
-            int carId = int.Parse(car.name.Split('_')[1]);
-            Vector3 target = carPositions[carId];
-            Vector3 currentPosition = car.transform.position;
-            Vector3 direction = (target - currentPosition).normalized;
-
-            // Imprimir la posición actual y siguiente
-            Debug.Log($"Car_{carId} - Current Position: {currentPosition} - Target Position: {target}");
-
-            // Si hay una distancia significativa, mover y rotar el carro
-            if (Vector3.Distance(currentPosition, target) > 0.1f)
-            {
-                StartCoroutine(RotateAndMoveCar(car, direction, target));
-            }
-        }
-    }
-
-    private IEnumerator RotateAndMoveCar(GameObject car, Vector3 direction, Vector3 target)
-    {
-        // Primero, rotamos el carro hacia la nueva dirección
-        float rotationSpeed = 500f; // Velocidad de rotación
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
-        
-        // Rotamos el carro de manera rápida hacia la dirección deseada
-        while (Quaternion.Angle(car.transform.rotation, targetRotation) > 1f)
-        {
-            car.transform.rotation = Quaternion.RotateTowards(car.transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-            yield return null;
-        }
-
-        // Luego, movemos el carro hacia la nueva posición
-        float movementSpeed = 100f; // Velocidad de movimiento hacia la posición
-        Vector3 currentPosition = car.transform.position;
-
-        // Mover el carro hacia la nueva posición en 1 segundo
-        while (Vector3.Distance(currentPosition, target) > 1f)
-        {
-            currentPosition = Vector3.MoveTowards(currentPosition, target, movementSpeed * Time.deltaTime);
-            car.transform.position = currentPosition;
-            yield return null;
-        }
-
-        // Asegurarse de que el carro llegue exactamente a la posición
-        car.transform.position = target;
+        return car;
     }
 }
 
-// Clases para deserializar el JSON
+public class CarController : MonoBehaviour
+{
+    private Vector3 currentPosition;
+    private Vector3 destination;
+    private Vector3 forwardDirection = Vector3.forward;
+    private Vector3 targetDirection;
+    private bool isRotating = false;
+
+    private float moveSpeed;
+    private float rotationDuration;
+    private float rotationElapsed = 0f;
+
+    public void Initialize(Vector3 initialPosition, float moveSpeed, float rotationDuration)
+    {
+        this.currentPosition = initialPosition;
+        this.destination = initialPosition;
+        this.moveSpeed = moveSpeed;
+        this.rotationDuration = rotationDuration;
+
+        // Coloca el prefab en la posición inicial
+        ApplyTranslation(currentPosition);
+    }
+
+    public void SetDestination(Vector3 destination)
+    {
+        this.destination = destination;
+        SetTargetRotation(currentPosition, destination);
+        Debug.Log($"Carro {gameObject.name}: posición actual {currentPosition}, nueva posición objetivo {destination}");
+    }
+
+    void Update()
+    {
+        if (Vector3.Distance(currentPosition, destination) > 0.1f)
+        {
+            if (isRotating)
+            {
+                RotateTowards(targetDirection);
+            }
+            else
+            {
+                Vector3 direction = (destination - currentPosition).normalized;
+                currentPosition += direction * moveSpeed * Time.deltaTime;
+                ApplyTranslation(currentPosition);
+            }
+        }
+        else
+        {
+            Debug.Log($"Carro {gameObject.name}: alcanzó su destino en {destination}");
+        }
+    }
+
+    private void SetTargetRotation(Vector3 current, Vector3 next)
+    {
+        Vector3 direction = (next - current).normalized;
+        targetDirection = direction;
+        isRotating = true;
+        rotationElapsed = 0f; // Reiniciar el tiempo de rotación
+    }
+
+    private void RotateTowards(Vector3 direction)
+    {
+        rotationElapsed += Time.deltaTime;
+        float rotationStep = Mathf.Clamp01(rotationElapsed / rotationDuration);
+
+        if (rotationStep >= 1f)
+        {
+            forwardDirection = direction;
+            isRotating = false;
+        }
+        else
+        {
+            float angle = Vector3.SignedAngle(forwardDirection, direction, Vector3.up);
+            float step = angle * rotationStep;
+            Matrix4x4 rotationMatrix = VecOps.RotateYM(step);
+            forwardDirection = rotationMatrix.MultiplyPoint3x4(forwardDirection).normalized;
+
+            ApplyRotation(forwardDirection); // Aplicar la rotación
+        }
+    }
+
+    private void ApplyTranslation(Vector3 position)
+    {
+        Matrix4x4 translationMatrix = VecOps.TranslateM(position);
+
+        // Aplicar la traslación al prefab
+        Vector3 transformedPosition = translationMatrix.MultiplyPoint3x4(Vector3.zero);
+        Debug.Log($"{gameObject.name} movido a posición: {transformedPosition}");
+        transform.localPosition = transformedPosition;
+    }
+
+    private void ApplyRotation(Vector3 forwardDirection)
+    {
+        Vector3 right = Vector3.Cross(Vector3.up, forwardDirection).normalized;
+        Vector3 up = Vector3.Cross(forwardDirection, right);
+
+        Matrix4x4 rotationMatrix = new Matrix4x4();
+        rotationMatrix.SetColumn(0, new Vector4(right.x, right.y, right.z, 0));
+        rotationMatrix.SetColumn(1, new Vector4(up.x, up.y, up.z, 0));
+        rotationMatrix.SetColumn(2, new Vector4(forwardDirection.x, forwardDirection.y, forwardDirection.z, 0));
+        rotationMatrix.SetColumn(3, new Vector4(0, 0, 0, 1));
+
+        // Aplicar la rotación calculada al prefab
+        transform.localRotation = MatrixToQuaternion(rotationMatrix);
+    }
+
+    private Quaternion MatrixToQuaternion(Matrix4x4 m)
+    {
+        float w = Mathf.Sqrt(1.0f + m.m00 + m.m11 + m.m22) / 2.0f;
+        float w4 = (4.0f * w);
+        float x = (m.m21 - m.m12) / w4;
+        float y = (m.m02 - m.m20) / w4;
+        float z = (m.m10 - m.m01) / w4;
+
+        return new Quaternion(x, y, z, w);
+    }
+}
+
 [System.Serializable]
 public class CarData
 {
     public int id;
-    public float[] position;
+    public List<float> position;
 }
 
 [System.Serializable]
-public class CarDataWrapper
+public class CarDataListWrapper
 {
     public List<CarData> cars;
 }
