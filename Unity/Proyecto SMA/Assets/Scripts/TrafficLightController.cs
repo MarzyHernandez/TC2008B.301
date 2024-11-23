@@ -4,19 +4,22 @@ using UnityEngine;
 
 public class TrafficLightController : MonoBehaviour
 {
-    //luces vehiculo
+    // Luces de vehículo
     public Light Green_Spot_Light;
     public Light Yellow_Spot_Light;
     public Light Red_Spot_Light;
 
-    //luces peaton
+    // Luces de peatón
     public Light Green1_Spot_Light;
     public Light Red1_Spot_Light;
 
-    public string trafficLightId; // ID único del semáforo en el modelo de Python
+    // Posiciones controladas por este semáforo (pueden ser 1 o más)
+    public Vector2Int[] controlledPositions;
 
     public void UpdateTrafficLightState(string state)
     {
+        Debug.Log($"Cambiando estado del semáforo en {controlledPositions[0]} a {state}");
+
         switch (state.ToLower())
         {
             case "green":
@@ -35,7 +38,7 @@ public class TrafficLightController : MonoBehaviour
                 break;
 
             default:
-                Debug.LogWarning($"Estado desconocido para el semáforo {trafficLightId}: {state}");
+                Debug.LogWarning($"Estado desconocido para el semáforo en {controlledPositions[0]}: {state}");
                 break;
         }
     }
