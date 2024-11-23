@@ -20,6 +20,51 @@ Aquí tenemos nuestro diseño en formato 2D del desarrollo del proyecto.
 - ***Clara.io***
 
 
+## Configuración del servidor
+
+### Crear y Activar un Ambiente Virtual
+
+1. Crea el ambiente virtual:
+
+    ```bash
+    python -m venv flask_env
+    ```
+
+2. Activa el ambiente virtual:
+
+    - En Windows:
+        ```bash
+        flask_env\Scripts\activate
+        ```
+    - En macOS/Linux:
+        ```bash
+        source flask_env/bin/activate
+        ```
+
+3. Verifica que el ambiente esté activo: Deberías ver el nombre del ambiente virtual al inicio de la línea de comandos. Por ejemplo:
+
+    ```bash
+    (flask_env) $
+    ```
+
+### Instalar las Dependencias
+
+1. Asegúrate de estar en el ambiente virtual (si no lo activaste, sigue el paso anterior).
+2. Instala las dependencias:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+### Ejecutar el Servidor
+
+Para iniciar el servidor, ejecuta el siguiente comando:
+
+```bash
+python api.py
+```
+
+
 ### Información Legal    
 > [!NOTE]
 > Derechos de autor © Derechos Reservados a los autores
