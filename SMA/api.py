@@ -26,7 +26,7 @@ def create_model():
     parking_numbers = list(range(1, 18))  # Estacionamientos del 1 al 17
 
     # Crear configuración de agentes para los autos
-    for _ in range(2):  # 2 autos por prueba
+    for _ in range(10):  # 2 autos por prueba
         start_parking = random.choice(parking_numbers)
         print(f"Estacionamiento {start_parking}")
         destination_parking = random.choice(parking_numbers)
