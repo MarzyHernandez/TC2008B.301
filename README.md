@@ -9,6 +9,7 @@ Este reto combina conceptos de inteligencia artificial (como la planificación y
 
 ## Ejemplo mapa
 Aquí tenemos nuestro diseño en formato 2D del desarrollo del proyecto. 
+
 ![Visualización 2D](8cars.gif)
 
 
