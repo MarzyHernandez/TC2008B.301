@@ -23,7 +23,7 @@ Aquí tenemos nuestro diseño en formato 2D del desarrollo del proyecto.
 
 ## Configuración del servidor
 
-### Crear y Activar un Ambiente Virtual
+### Crear y activar un ambiente virtual
 
 1. Crea el ambiente virtual:
 
@@ -48,7 +48,7 @@ Aquí tenemos nuestro diseño en formato 2D del desarrollo del proyecto.
     (flask_env) $
     ```
 
-### Instalar las Dependencias
+### Instalar las dependencias
 
 1. Asegúrate de estar en el ambiente virtual (si no lo activaste, sigue el paso anterior).
 2. Instala las dependencias:
@@ -57,7 +57,7 @@ Aquí tenemos nuestro diseño en formato 2D del desarrollo del proyecto.
     pip install -r requirements.txt
     ```
 
-### Ejecutar el Servidor
+### Ejecutar el servidor
 
 Para iniciar el servidor, ejecuta el siguiente comando:
 
