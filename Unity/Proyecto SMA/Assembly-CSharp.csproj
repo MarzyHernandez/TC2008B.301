@@ -66,6 +66,8 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\CarMover.cs" />
     <Compile Include="Assets\Scripts\ModeloCarros.cs" />
+    <Compile Include="Assets\Scripts\TrafficLightController.cs" />
+    <Compile Include="Assets\Scripts\TrafficLightManager.cs" />
     <Compile Include="Assets\Scripts\VecOps.cs" />
   </ItemGroup>
   <ItemGroup>

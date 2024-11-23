@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4008556212459765002}
   - component: {fileID: 7569816487193603083}
   m_Layer: 0
-  m_Name: Green_Spot Light
+  m_Name: Green_Spot_Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -105,7 +105,7 @@ GameObject:
   - component: {fileID: 8709599330020542724}
   - component: {fileID: 3366707254259346657}
   m_Layer: 0
-  m_Name: Red1_Spot Light
+  m_Name: Red1_Spot_Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -199,7 +199,7 @@ GameObject:
   - component: {fileID: 1226998597429108903}
   - component: {fileID: 4556227396697908402}
   m_Layer: 0
-  m_Name: Yellow_Spot Light
+  m_Name: Yellow_Spot_Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -293,7 +293,7 @@ GameObject:
   - component: {fileID: 6266353808571148384}
   - component: {fileID: 7927593360965126149}
   m_Layer: 0
-  m_Name: Green1_Spot Light
+  m_Name: Green1_Spot_Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -387,7 +387,7 @@ GameObject:
   - component: {fileID: 7593327048979419561}
   - component: {fileID: 3059053680725909620}
   m_Layer: 0
-  m_Name: Red_Spot Light
+  m_Name: Red_Spot_Light
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
