@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 public class TrafficLightManager : MonoBehaviour
 {
     public TrafficLightController[] trafficLights; // Referencias a los semáforos en Unity
-    public string apiUrl = "http://localhost:5003/getLights"; // URL del API para obtener los estados de los semáforos
+    public string apiUrl = "http://127.0.0.1:5003/getLights"; // URL del API para obtener los estados de los semáforos
 
     void Start()
     {
