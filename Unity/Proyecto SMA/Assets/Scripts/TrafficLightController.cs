@@ -4,65 +4,52 @@ using UnityEngine;
 
 public class TrafficLightController : MonoBehaviour
 {
+    //luces vehiculo
     public Light Green_Spot_Light;
     public Light Yellow_Spot_Light;
     public Light Red_Spot_Light;
+
+    //luces peaton
     public Light Green1_Spot_Light;
     public Light Red1_Spot_Light;
-    public float vehicleGreenTime = 10f;
-    public float vehicleYellowTime = 2f;
-    public float vehicleRedTime = 12f;
-    private float cycleTime;
-    private float startTime;
 
-    void Start()
+    public string trafficLightId; // ID único del semáforo en el modelo de Python
+
+    public void UpdateTrafficLightState(string state)
     {
-        cycleTime = vehicleGreenTime + vehicleYellowTime + vehicleRedTime;
-
-        // Si el tiempo de inicio no se ha sincronizado, lo inicializamos al tiempo actual
-        if (startTime == 0f)
+        switch (state.ToLower())
         {
-            startTime = Time.time;
-        }
+            case "green":
+                SetVehicleLightStates(true, false, false);
+                SetPedestrianLightStates(false, true); // Peatón: rojo
+                break;
 
-        StartCoroutine(SynchronizeTrafficLights());
-    }
+            case "yellow":
+                SetVehicleLightStates(false, true, false);
+                SetPedestrianLightStates(false, true); // Peatón: rojo
+                break;
 
-    IEnumerator SynchronizeTrafficLights()
-    {
-        while (true)
-        {
-            float elapsed = (Time.time - startTime) % cycleTime;
+            case "red":
+                SetVehicleLightStates(false, false, true);
+                SetPedestrianLightStates(true, false); // Peatón: verde
+                break;
 
-            if (elapsed < vehicleGreenTime)
-            {
-                SetTrafficLights(true, false, false, false, true); // Vehículos: verde, Peatones: rojo
-            }
-            else if (elapsed < vehicleGreenTime + vehicleYellowTime)
-            {
-                SetTrafficLights(false, true, false, false, true); // Vehículos: amarillo, Peatones: rojo
-            }
-            else
-            {
-                SetTrafficLights(false, false, true, true, false); // Vehículos: rojo, Peatones: verde
-            }
-
-            yield return null;
+            default:
+                Debug.LogWarning($"Estado desconocido para el semáforo {trafficLightId}: {state}");
+                break;
         }
     }
 
-    public void SetStartTime(float globalStartTime)
+    private void SetVehicleLightStates(bool green, bool yellow, bool red)
     {
-        startTime = globalStartTime;
+        Green_Spot_Light.enabled = green;
+        Yellow_Spot_Light.enabled = yellow;
+        Red_Spot_Light.enabled = red;
     }
 
-    private void SetTrafficLights(bool vehicleGreen, bool vehicleYellow, bool vehicleRed, bool pedestrianGreen, bool pedestrianRed)
+    private void SetPedestrianLightStates(bool green, bool red)
     {
-        Green_Spot_Light.enabled = vehicleGreen;
-        Yellow_Spot_Light.enabled = vehicleYellow;
-        Red_Spot_Light.enabled = vehicleRed;
-
-        Green1_Spot_Light.enabled = pedestrianGreen;
-        Red1_Spot_Light.enabled = pedestrianRed;
+        Green1_Spot_Light.enabled = green;
+        Red1_Spot_Light.enabled = red;
     }
 }
