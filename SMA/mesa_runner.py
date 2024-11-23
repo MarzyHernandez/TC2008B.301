@@ -19,7 +19,7 @@ def agent_portrayal(agent):
     if isinstance(agent, CarAgent):
         return {"Shape": "circle", "Filled": "true", "Layer": 1, "Color": agent.color, "r": 0.5}
     elif isinstance(agent, PedestrianAgent):
-        return {"Shape": "circle", "Filled": "true", "Layer": 2, "Color": "orange", "r": 0.3}  # Siempre naranja
+        return {"Shape": "circle", "Filled": "true", "Layer": 2, "Color": "orange", "r": 0.3}  
     elif isinstance(agent, TrafficLightAgent):
         color = "green" if agent.state == "green" else "yellow" if agent.state == "yellow" else "red"
         return {"Shape": "rect", "Filled": "true", "Layer": 0, "Color": color, "w": 0.8, "h": 0.8}
@@ -38,9 +38,8 @@ def start_server():
     grid = CanvasGrid(agent_portrayal, grid_size, grid_size, 500, 500)
     stats_display = StatsDisplay()
 
-    # Configuración automática de 20 autos y 10 peatones
     agent_configs = []
-    parking_numbers = list(range(1, 18))  # Estacionamientos del 1 al 17
+    parking_numbers = list(range(1, 18)) 
 
     for _ in range(20):  # 20 autos
         start_parking = random.choice(parking_numbers)
@@ -53,14 +52,13 @@ def start_server():
 
         agent_configs.append((start_parking_pos, destination_parking_pos))
 
-    # Cambiar el puerto de la visualización de Mesa
     server = ModularServer(
         TrafficModel,
         [stats_display, grid],
         "Simulación de Tráfico",
-        {"width": grid_size, "height": grid_size, "agent_configs": agent_configs, "num_pedestrians": 10}  # 10 peatones
+        {"width": grid_size, "height": grid_size, "agent_configs": agent_configs, "num_pedestrians": 10}  
     )
-    server.port = 8521  # Cambiado de 8521 a 8522
+    server.port = 8521  
     server.launch()
 
 if __name__ == "__main__":
