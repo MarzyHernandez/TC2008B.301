@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 public class PedestrianManager : MonoBehaviour
 {
     public GameObject pedestrianPrefab; // Prefab del peatón
-    public string apiUrl = "http://127.0.0.1:5003/getPeaton"; // URL de la API
+    public string apiUrl = "http://127.0.0.1:5003/getPeatonEscalado"; // URL de la API
     //private float moveSpeed = 2f; // Velocidad de movimiento
 
     private Dictionary<string, GameObject> pedestrians = new Dictionary<string, GameObject>(); // Rastrea peatones en la escena
@@ -33,7 +33,6 @@ public class PedestrianManager : MonoBehaviour
             {
                 Debug.LogError($"Error al obtener datos de peatones: {request.error}");
             }
-
             yield return new WaitForSeconds(0.1f); // Actualiza cada segundo
         }
     }
@@ -56,7 +55,6 @@ public class PedestrianManager : MonoBehaviour
                 CreatePedestrian(pedestrianData);
             }
         }
-
         RemoveMissingPedestrians(pedestrianDataArray);
     }
 
@@ -73,8 +71,22 @@ public class PedestrianManager : MonoBehaviour
     {
         if (pedestrians.TryGetValue(pedestrianData.id, out GameObject pedestrian))
         {
+            Vector3 currentPosition = pedestrian.transform.position;
             Vector3 newPosition = ConvertToUnityPosition(pedestrianData.position);
-            pedestrian.transform.position = Vector3.Lerp(pedestrian.transform.position, newPosition, Time.deltaTime * 40f); // Movimiento suave
+
+            // Calcular dirección de movimiento
+            Vector3 direction = (newPosition - currentPosition).normalized;
+
+            // Calcular ángulo en el rango de -90° a 90°
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+            targetAngle = Mathf.Clamp(targetAngle, -180f, 180f);
+
+            // Aplicar rotación suavemente
+            Quaternion targetRotation = Quaternion.Euler(0, targetAngle, 0);
+            pedestrian.transform.rotation = Quaternion.Lerp(pedestrian.transform.rotation, targetRotation, Time.deltaTime * 10f);
+
+            // Mover posición suavemente
+            pedestrian.transform.position = Vector3.Lerp(currentPosition, newPosition, Time.deltaTime * 40f);
         }
     }
 
@@ -105,7 +117,7 @@ public class PedestrianManager : MonoBehaviour
 
     private Vector3 ConvertToUnityPosition(int[] jsonPosition)
     {
-        return new Vector3(jsonPosition[0], 0, jsonPosition[1]); // X -> X, Y -> Z
+        return new Vector3(jsonPosition[0], 0, jsonPosition[1]); // Cambia a Y -> Z
     }
 
     [System.Serializable]
