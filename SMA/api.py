@@ -180,9 +180,9 @@ def is_white(x, y):
 
 def scale_position(x, y):
     """
-    Escalar la posición según las reglas definidas (ejemplo: convertir coordenadas simples en una más grande).
+    Escalar la posición según las reglas definidas 
     """
-    return [x * 10, y * 10]  
+    return [x * 10 + 3, y * 10 + 3]  
 
 
 
