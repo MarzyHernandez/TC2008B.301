@@ -7,6 +7,7 @@ public class PedestrianManager : MonoBehaviour
 {
     public GameObject pedestrianPrefab; // Prefab del peatón
     public string apiUrl = "http://127.0.0.1:5003/getPeaton"; // URL de la API
+    //private float moveSpeed = 2f; // Velocidad de movimiento
 
     private Dictionary<string, GameObject> pedestrians = new Dictionary<string, GameObject>(); // Rastrea peatones en la escena
     private HashSet<Vector2Int> validPositions = new HashSet<Vector2Int>(); // Posiciones válidas desde el JSON
@@ -33,7 +34,7 @@ public class PedestrianManager : MonoBehaviour
                 Debug.LogError($"Error al obtener datos de peatones: {request.error}");
             }
 
-            yield return new WaitForSeconds(1); // Actualiza cada segundo
+            yield return new WaitForSeconds(0.1f); // Actualiza cada segundo
         }
     }
 
@@ -73,7 +74,7 @@ public class PedestrianManager : MonoBehaviour
         if (pedestrians.TryGetValue(pedestrianData.id, out GameObject pedestrian))
         {
             Vector3 newPosition = ConvertToUnityPosition(pedestrianData.position);
-            pedestrian.transform.position = Vector3.Lerp(pedestrian.transform.position, newPosition, Time.deltaTime * 2f); // Movimiento suave
+            pedestrian.transform.position = Vector3.Lerp(pedestrian.transform.position, newPosition, Time.deltaTime * 40f); // Movimiento suave
         }
     }
 
