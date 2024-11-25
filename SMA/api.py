@@ -159,14 +159,14 @@ def get_scaled_position(agent):
     Lógica para escalar la posición del peatón según las celdas adyacentes 'blancas'.
     """
     x, y = agent.pos
-
+    '''
     adjacent_positions = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
 
     for nx, ny in adjacent_positions:
         if is_white(nx, ny):
             return scale_position(nx, ny)
-
-    return [x, y]
+    '''
+    return scale_position(x, y)
 
 def is_white(x, y):
     """
