@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 public class CarMover : MonoBehaviour
 {
     private const string API_URL = "http://127.0.0.1:5003/getCarrosEscalado";
-    public GameObject carPrefab; // Prefab asignado desde el inspector
+    public List<GameObject> carPrefabs; // Prefab asignado desde el inspector
     private Dictionary<int, GameObject> cars = new Dictionary<int, GameObject>();
     private bool isFirstCall = true;
 
@@ -71,7 +71,11 @@ public class CarMover : MonoBehaviour
 
     private GameObject InstantiateCar(int id, Vector3 initialPosition)
     {
-        GameObject car = Instantiate(carPrefab); // Crear una instancia del prefab
+        // Seleccionar un prefab aleatorio de la lista
+        GameObject selectedPrefab = carPrefabs[Random.Range(0, carPrefabs.Count)];
+
+        // Crear una instancia del prefab seleccionado
+        GameObject car = Instantiate(selectedPrefab, initialPosition, Quaternion.identity);
         car.name = "Car_" + id;
 
         CarController controller = car.AddComponent<CarController>();
@@ -79,6 +83,7 @@ public class CarMover : MonoBehaviour
 
         return car;
     }
+
 }
 
 public class CarController : MonoBehaviour

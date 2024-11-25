@@ -67,6 +67,7 @@
     <Compile Include="Assets\Scripts\CarMover.cs" />
     <Compile Include="Assets\Scripts\ModeloCarros.cs" />
     <Compile Include="Assets\Scripts\TrafficLightController.cs" />
+    <Compile Include="Assets\Scripts\PedestrianManager.cs" />
     <Compile Include="Assets\Scripts\PeopleMover.cs" />
     <Compile Include="Assets\Scripts\TrafficLightManager.cs" />
     <Compile Include="Assets\Scripts\VecOps.cs" />
