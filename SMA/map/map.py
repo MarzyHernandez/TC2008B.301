@@ -510,3 +510,19 @@ def calculate_sidewalks(buildings):
 
 # Calcular las banquetas (dentro del área de edificios)
 SIDEWALKS = calculate_sidewalks(BUILDINGS)
+
+
+DOORS = {
+    1: (2, 17), 
+    2: (5, 14),
+    3: (8, 20),
+    4: (11, 15),
+    5: (18, 21),
+    6: (17, 15),
+    7: (4, 6),
+    8: (3, 3),
+    9: (9, 7),
+    10: (10, 2), 
+    11: (16, 3),
+    12: (21, 6)
+}

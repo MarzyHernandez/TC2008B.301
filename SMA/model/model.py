@@ -3,14 +3,16 @@ from mesa import Model
 from mesa.time import SimultaneousActivation
 from mesa.space import MultiGrid
 from model.agents import CarAgent, PedestrianAgent, TrafficLightAgent, StaticAgent
-from map.map import BUILDINGS, SIDEWALKS, PARKINGS, TRAFFIC_LIGHTS_RED, TRAFFIC_LIGHTS_GREEN, GLORIETA
+from map.map import BUILDINGS, SIDEWALKS, PARKINGS, TRAFFIC_LIGHTS_RED, TRAFFIC_LIGHTS_GREEN, GLORIETA, DOORS
 
 class TrafficModel(Model):
     def __init__(self, width, height, agent_configs, num_pedestrians=5):
+        self.door_positions = DOORS
+
         super().__init__()
         self.grid = MultiGrid(width, height, torus=False)
         self.schedule = SimultaneousActivation(self)
-        self.sidewalk_positions = SIDEWALKS  # Añadir banquetas al modelo
+        self.sidewalk_positions = SIDEWALKS 
 
         # Agregar edificios
         for i, pos in enumerate(BUILDINGS):
@@ -58,6 +60,21 @@ class TrafficModel(Model):
             pedestrian = PedestrianAgent(self.next_id(), self)
             self.schedule.add(pedestrian)
             self.grid.place_agent(pedestrian, random_building)
+
+        # Agregar puertas
+        for door_id, door_pos in DOORS.items():
+            door = StaticAgent(f"door_{door_id}", self, "door", "gray")
+            self.grid.place_agent(door, door_pos)
+
+        # Dentro de la clase TrafficModel
+        self.inside_building_positions = []  # Lista para celdas internas del edificio
+        for building_pos in BUILDINGS:
+            for dx in range(-1, 2):  # Considera un área interna alrededor del edificio
+                for dy in range(-1, 2):
+                    pos = (building_pos[0] + dx, building_pos[1] + dy)
+                    if pos not in SIDEWALKS and pos not in PARKINGS and pos in BUILDINGS:
+                        self.inside_building_positions.append(pos)
+
 
     def step(self):
         self.schedule.step()
