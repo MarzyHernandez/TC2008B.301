@@ -1,6 +1,6 @@
 from mesa import Agent
 import random
-from map.map import PARKINGS, DIRECTIONS, DOORS
+from map.map import PARKINGS, DIRECTIONS, DOORS, DOOR_GROUPS
 
 
 class CarAgent(Agent):
@@ -101,6 +101,15 @@ class CarAgent(Agent):
                 dx, dy = 1, 0
             elif direction == "left":
                 dx, dy = -1, 0
+            elif direction == "up-right" or direction == "right-up":
+                dx, dy = 1, 1
+            elif direction == "up-left" or direction == "left-up":
+                dx, dy = -1, 1
+            elif direction == "down-right" or direction == "right-down":
+                dx, dy = 1, -1
+            elif direction == "down-left" or direction == "left-down":
+                dx, dy = -1, -1
+            
 
             for distance in range(1, self.detection_distance + 1):
                 neighbor_pos = (x + dx * distance, y + dy * distance)
@@ -147,6 +156,22 @@ class CarAgent(Agent):
             moves.append((x + 1, y))
         if 'left' in allowed_directions and self.within_grid((x - 1, y)):
             moves.append((x - 1, y))
+        if 'up-right' in allowed_directions and self.within_grid((x + 1, y + 1)):
+            moves.append((x + 1, y + 1))
+        if 'up-left' in allowed_directions and self.within_grid((x - 1, y + 1)):
+            moves.append((x - 1, y + 1))
+        if 'down-right' in allowed_directions and self.within_grid((x + 1, y - 1)):
+            moves.append((x + 1, y - 1))
+        if 'down-left' in allowed_directions and self.within_grid((x - 1, y - 1)):
+            moves.append((x - 1, y - 1))
+        if 'right-up' in allowed_directions and self.within_grid((x + 1, y + 1)):
+            moves.append((x + 1, y + 1))
+        if 'right-down' in allowed_directions and self.within_grid((x + 1, y - 1)):
+            moves.append((x + 1, y - 1))
+        if 'left-up' in allowed_directions and self.within_grid((x - 1, y + 1)):
+            moves.append((x - 1, y + 1))
+        if 'left-down' in allowed_directions and self.within_grid((x - 1, y - 1)):
+            moves.append((x - 1, y - 1))
 
         return moves
 
@@ -229,18 +254,8 @@ class CarAgent(Agent):
         self.move()
 
 
-from mesa import Agent
-import random
-
 
 class PedestrianAgent(Agent):
-    DOOR_GROUPS = {
-        1: [1, 2, 3, 4],
-        2: [5, 6],
-        3: [7, 8, 9, 10],
-        4: [11, 12]
-    }
-
     def __init__(self, unique_id, model, color="orange"):
         super().__init__(unique_id, model)
         self.color = color
@@ -277,10 +292,11 @@ class PedestrianAgent(Agent):
 
     def get_group_for_door(self, door_id):
         """Obtiene el grupo al que pertenece una puerta por su ID."""
-        for group, doors in self.DOOR_GROUPS.items():
+        for group, doors in DOOR_GROUPS.items():
             if door_id in doors:
                 return group
         return None
+
 
     def get_valid_moves(self):
         """
