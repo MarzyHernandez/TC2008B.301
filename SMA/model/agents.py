@@ -38,19 +38,20 @@ class CarAgent(Agent):
 
 
     def can_advance_at_light(self, pos):
-        """Permite avanzar solo si la celda está controlada por un semáforo en verde."""
         cell_agents = self.model.grid.get_cell_list_contents(pos)
         for agent in cell_agents:
             if isinstance(agent, TrafficLightAgent):
-                # Verificar si la posición está controlada por este semáforo y su estado es verde
-                if pos in agent.green_positions + agent.red_positions and agent.state == "green":
-                    return True
-                # Si la posición está controlada y el semáforo está en rojo, no se puede avanzar
-                if pos in agent.green_positions + agent.red_positions and agent.state == "red":
-                    print(f"Carro {self.unique_id} detenido: semáforo en rojo en {pos}.")
-                    return False
-
-        # Si no hay semáforos que controlen esta celda, se permite avanzar
+                if pos in agent.green_positions + agent.red_positions:
+                    if agent.state == "green":
+                        return True
+                    elif agent.state == "yellow":
+                        # Decidir si avanzar o detenerse en amarillo
+                        decision = random.choice([True, False])
+                        print(f"Carro {self.unique_id} decide {'avanzar' if decision else 'detenerse'} en amarillo en {pos}.")
+                        return decision
+                    elif agent.state == "red":
+                        print(f"Carro {self.unique_id} detenido: semáforo en rojo en {pos}.")
+                        return False
         return True
 
 
@@ -195,7 +196,6 @@ class CarAgent(Agent):
         neighbors = self.model.grid.get_neighbors(traffic_light_pos, moore=False, include_center=False, radius=1)
         return sum(1 for agent in neighbors if isinstance(agent, CarAgent))
 
-
     def move(self):
         if self.has_arrived:
             return
@@ -285,12 +285,13 @@ class PedestrianAgent(Agent):
     def __init__(self, unique_id, model, color="orange"):
         super().__init__(unique_id, model)
         self.color = color
-        self.is_crossing = False
-        self.crossing_path = []
-        self.last_position = None
-        self.target_door = None
-        self.non_crossable_lights = [(1, 6), (5, 1), (17, 8), (8, 22)]
-        self.current_direction = None
+        self.is_crossing = False  # Indica si está cruzando actualmente
+        self.crossing_path = []  # Ruta que sigue al cruzar
+        self.last_position = None  # Última posición para evitar ciclos
+        self.target_door = None  # Puerta objetivo
+        self.non_crossable_lights = [(1, 6), (5, 1), (17, 8), (8, 22)]  # Lugares no permitidos
+        self.current_direction = None  # Dirección de movimiento actual
+        self.waiting_for_green = False  # Si está esperando que el semáforo cambie a verde
 
     def within_grid(self, pos):
         """Verifica si una posición está dentro del grid."""
@@ -302,9 +303,7 @@ class PedestrianAgent(Agent):
         return pos in self.model.sidewalk_positions
 
     def is_valid_red_light(self, pos):
-        """
-        Verifica si el semáforo rojo en una posición es válido para cruzar.
-        """
+        """Verifica si el semáforo en rojo permite cruzar."""
         if pos in self.non_crossable_lights:
             return False
         for agent in self.model.grid.get_cell_list_contents(pos):
@@ -348,19 +347,12 @@ class PedestrianAgent(Agent):
         """
         Elige una nueva puerta aleatoria dentro del grupo actual.
         """
-        # Obtener el grupo actual del objetivo
         current_group = self.get_group_for_door(self.target_door)
-
-        # Filtrar todas las puertas que pertenecen al grupo actual
         group_doors = [
             door_id for door_id, pos in self.model.door_positions.items()
             if self.get_group_for_door(door_id) == current_group
         ]
-
-        # Evitar elegir la misma puerta actual
         group_doors = [door_id for door_id in group_doors if door_id != self.target_door]
-
-        # Elegir una nueva puerta aleatoria si hay disponibles
         if group_doors:
             self.target_door = random.choice(group_doors)
             print(f"Peatón {self.unique_id} eligió la puerta {self.target_door} como nuevo objetivo.")
@@ -378,12 +370,12 @@ class PedestrianAgent(Agent):
                 for door_id, pos in self.model.door_positions.items()
             }
             self.target_door = min(distances, key=distances.get)
-            print(f"Peatón {self.unique_id} encontró la puerta {self.target_door} y pertenece al grupo {self.get_group_for_door(self.target_door)}.")
+            print(f"Peatón {self.unique_id} encontró la puerta {self.target_door} como objetivo inicial.")
             return
 
         # Si el peatón alcanza su puerta objetivo, elige otra
-        target_pos = self.model.door_positions[self.target_door]
-        if self.pos == target_pos:
+        target_pos = self.model.door_positions.get(self.target_door)
+        if target_pos and self.pos == target_pos:
             print(f"Peatón {self.unique_id} llegó a la puerta {self.target_door}.")
             self.choose_next_door()
             return
@@ -395,15 +387,16 @@ class PedestrianAgent(Agent):
             return
 
         # Elegir el movimiento hacia el objetivo más cercano
-        best_move = min(
-            valid_moves,
-            key=lambda move: abs(move[0] - target_pos[0]) + abs(move[1] - target_pos[1])
-        )
-
-        # Actualizar la posición del peatón
-        self.last_position = self.pos
-        self.model.grid.move_agent(self, best_move)
-        print(f"Peatón {self.unique_id} moviéndose a: {best_move}")
+        if target_pos:
+            best_move = min(
+                valid_moves,
+                key=lambda move: abs(move[0] - target_pos[0]) + abs(move[1] - target_pos[1])
+            )
+            self.last_position = self.pos
+            self.model.grid.move_agent(self, best_move)
+            print(f"Peatón {self.unique_id} moviéndose a: {best_move}")
+        else:
+            print(f"Peatón {self.unique_id} no tiene un objetivo claro en este momento.")
 
     def initiate_crossing(self, direction):
         """
@@ -417,7 +410,7 @@ class PedestrianAgent(Agent):
 
         self.is_crossing = True
         print(f"Peatón {self.unique_id} inicia cruce hacia: {self.crossing_path[0]}")
-    
+
     def wants_to_cross(self, traffic_light_pos):
         """El peatón desea cruzar si está cerca de su destino."""
         return self.estimate_steps(traffic_light_pos) <= 2
@@ -433,23 +426,21 @@ class PedestrianAgent(Agent):
 
     def step(self):
         """Moverse cada 2 pasos."""
-        if self.model.schedule.steps % 2 == 0:  # Moverse cada 2 pasos
+        if self.model.schedule.steps % 2 == 0:
             self.move()
 
 class TrafficLightAgent(Agent):
     def __init__(self, unique_id, model, red_positions, green_positions, green_time=10, yellow_time=3, red_time=10, is_green=False):
         super().__init__(unique_id, model)
-        self.red_positions = red_positions  # Coordenadas de las celdas rojas
-        self.green_positions = green_positions  # Coordenadas de las celdas verdes
+        self.red_positions = red_positions
+        self.green_positions = green_positions
         self.green_time = green_time
         self.yellow_time = yellow_time
         self.red_time = red_time
         self.state = "green" if is_green else "red"
         self.timer = self.green_time if is_green else self.red_time
-        self.cruce_partner = None  # Referencia al semáforo del cruce opuesto
-        self.proposals = []  # Propuestas recibidas
-
-        
+        self.cruce_partner = None
+        self.proposals = []
 
     def set_partner(self, partner):
         """Configura el semáforo opuesto del mismo cruce."""
@@ -502,38 +493,53 @@ class TrafficLightAgent(Agent):
     def change_color(self):
         """Cambia el estado del semáforo y sincroniza con el del cruce opuesto."""
         if self.state == "green":
+            # Pasar a amarillo antes de rojo
             self.state = "yellow"
             self.timer = self.yellow_time
             print(f"Semáforo {self.unique_id} cambia a amarillo.")
-        elif self.state == "yellow":
-            self.state = "red"
-            self.timer = self.red_time
-            print(f"Semáforo {self.unique_id} cambia a rojo.")
-            # Cambiar al semáforo opuesto a verde
-            if self.cruce_partner:
-                self.cruce_partner.state = "green"
-                self.cruce_partner.timer = self.cruce_partner.green_time
-                print(f"Semáforo opuesto {self.cruce_partner.unique_id} cambia a verde.")
-        elif self.state == "red":
-            self.state = "green"
-            self.timer = self.green_time
-            print(f"Semáforo {self.unique_id} cambia a verde.")
-            # Cambiar al semáforo opuesto a rojo
+            # Asegurar que el semáforo opuesto está en rojo
             if self.cruce_partner:
                 self.cruce_partner.state = "red"
                 self.cruce_partner.timer = self.cruce_partner.red_time
-                print(f"Semáforo opuesto {self.cruce_partner.unique_id} cambia a rojo.")
+                print(f"Semáforo opuesto {self.cruce_partner.unique_id} sincronizado a rojo.")
+        elif self.state == "yellow":
+            # Pasar a rojo y sincronizar con el cruce opuesto
+            self.state = "red"
+            self.timer = self.red_time
+            print(f"Semáforo {self.unique_id} cambia a rojo.")
+            if self.cruce_partner:
+                self.cruce_partner.state = "green"
+                self.cruce_partner.timer = self.cruce_partner.green_time
+                print(f"Semáforo opuesto {self.cruce_partner.unique_id} sincronizado a verde.")
+        elif self.state == "red":
+            # Evaluar propuestas antes de pasar a verde
+            proposal = self.evaluate_proposals()
+            if proposal:
+                self.state = "green"
+                self.timer = self.green_time
+                print(f"Semáforo {self.unique_id} cambia a verde por propuesta.")
+                if self.cruce_partner:
+                    self.cruce_partner.state = "red"
+                    self.cruce_partner.timer = self.cruce_partner.red_time
+                    print(f"Semáforo opuesto {self.cruce_partner.unique_id} sincronizado a rojo.")
+            else:
+                # Si no hay propuestas, permanecer en rojo
+                self.timer = self.red_time
+                print(f"Semáforo {self.unique_id} permanece en rojo por falta de propuestas.")
 
     def step(self):
         """Reduce el temporizador y gestiona cambios de estado."""
         self.timer -= 1
         if self.timer <= 0:
-            self.solicit_proposals()
-            self.change_color()
+            # Siempre pasar por amarillo antes de rojo
+            if self.state == "green":
+                self.change_color()  # Verde -> Amarillo
+            elif self.state == "yellow":
+                self.change_color()  # Amarillo -> Rojo
+            elif self.state == "red":
+                self.solicit_proposals()
+                self.change_color()  # Rojo -> Verde si hay propuestas
 
 
 class StaticAgent(Agent):
     def __init__(self, unique_id, model, agent_type, color):
-        super().__init__(unique_id, model)
-        self.agent_type = agent_type  
-        self.color = color 

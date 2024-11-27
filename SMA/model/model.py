@@ -4,7 +4,6 @@ from mesa.time import SimultaneousActivation
 from mesa.space import MultiGrid
 from model.agents import CarAgent, PedestrianAgent, TrafficLightAgent, StaticAgent
 from map.map import BUILDINGS, SIDEWALKS, PARKINGS, TRAFFIC_LIGHTS_RED, TRAFFIC_LIGHTS_GREEN, GLORIETA, DOORS
-
 class TrafficModel(Model):
     def __init__(self, width, height, agent_configs, num_pedestrians=5):
         self.door_positions = DOORS
@@ -49,14 +48,20 @@ class TrafficModel(Model):
                 model=self,
                 red_positions=red_positions,
                 green_positions=green_positions,
-                is_green=False
+                green_time=10,
+                yellow_time=3,
+                red_time=10,
+                is_green=False  # Comienza en rojo
             )
             green_light = TrafficLightAgent(
                 unique_id=f"green_light_{i}",
                 model=self,
                 red_positions=red_positions,
                 green_positions=green_positions,
-                is_green=True
+                green_time=10,
+                yellow_time=3,
+                red_time=10,
+                is_green=True  # Comienza en verde
             )
 
             # Configurar relación de emparejamiento
