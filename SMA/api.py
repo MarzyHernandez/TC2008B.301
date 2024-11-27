@@ -72,25 +72,30 @@ def get_lights():
     if model is None:
         create_model()
 
-    traffic_lights = []
-
+    lights = []
+    seen_positions = set()
     for agent in model.schedule.agents:
         if isinstance(agent, TrafficLightAgent):
-            # Usar red_positions y green_positions directamente
-            for pos in agent.red_positions:
-                traffic_lights.append({
-                    "id": f"light_{pos[0]}_{pos[1]}",
-                    "position": [pos[0], pos[1]],
-                    "color": "red" if agent.state == "red" else "green"
-                })
-            for pos in agent.green_positions:
-                traffic_lights.append({
-                    "id": f"light_{pos[0]}_{pos[1]}",
-                    "position": [pos[0], pos[1]],
-                    "color": "green" if agent.state == "green" else "red"
-                })
-
-    return jsonify(traffic_lights)
+            # Obtener las posiciones del agente desde la cuadrícula
+            red_positions = agent.red_positions
+            green_positions = agent.green_positions
+            for pos in red_positions:
+                if tuple(pos) not in seen_positions:
+                    lights.append({
+                        'id': agent.unique_id,
+                        'color': 'red',
+                        'position': pos
+                    })
+                    seen_positions.add(tuple(pos))
+            for pos in green_positions:
+                if tuple(pos) not in seen_positions:
+                    lights.append({
+                        'id': agent.unique_id,
+                        'color': 'green',
+                        'position': pos
+                    })
+                    seen_positions.add(tuple(pos))
+    return jsonify(lights)
 
 
 # Función para cambiar el estado de los peatones
