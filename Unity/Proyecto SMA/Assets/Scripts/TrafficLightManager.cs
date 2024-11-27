@@ -31,7 +31,7 @@ public class TrafficLightManager : MonoBehaviour
                 Debug.LogError($"Error al obtener datos del API: {request.error}");
             }
 
-            yield return new WaitForSeconds(0.7f); // Actualizar cada 0.7 segundos
+            yield return new WaitForSeconds(0.4f); // Actualizar cada 0.7 segundos
         }
     }
 

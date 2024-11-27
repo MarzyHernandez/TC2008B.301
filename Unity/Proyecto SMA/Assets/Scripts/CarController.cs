@@ -9,6 +9,8 @@ public class CarController : MonoBehaviour
     public List<GameObject> carPrefabs; // Prefab asignado desde el inspector
     private Dictionary<int, GameObject> cars = new Dictionary<int, GameObject>();
     private Dictionary<int, Queue<Vector3>> carPaths = new Dictionary<int, Queue<Vector3>>();
+    private Dictionary<int, Vector3> carPositions = new Dictionary<int, Vector3>();
+    private Dictionary<int, Quaternion> carRotations = new Dictionary<int, Quaternion>();
 
     private float moveSpeed = 20f;
     private float rotationSpeed = 200f; // Grados por segundo
@@ -44,6 +46,9 @@ public class CarController : MonoBehaviour
 
                                 newCar.name = $"Car_{carData.id}";
                                 cars.Add(carData.id, newCar);
+
+                                carPositions[carData.id] = newPosition;
+                                carRotations[carData.id] = Quaternion.identity;
 
                                 Queue<Vector3> path = new Queue<Vector3>();
                                 path.Enqueue(newPosition);
@@ -85,9 +90,11 @@ public class CarController : MonoBehaviour
             {
                 Vector3 currentTarget = carPaths[carId].Peek();
 
-                if (Vector3.Distance(car.transform.position, currentTarget) > 0.1f)
+                if (Vector3.Distance(carPositions[carId], currentTarget) > 0.1f)
                 {
-                    MoveCarTowards(car, currentTarget);
+                    MoveCarTowards(carId, currentTarget);
+                    car.transform.position = carPositions[carId]; // Actualiza la posición real del objeto en la escena
+                    car.transform.rotation = carRotations[carId]; // Actualiza la rotación real del objeto en la escena
                 }
                 else
                 {
@@ -98,13 +105,13 @@ public class CarController : MonoBehaviour
         }
     }
 
-    private void MoveCarTowards(GameObject car, Vector3 target)
+    private void MoveCarTowards(int carId, Vector3 target)
     {
-        Vector3 direction = (target - car.transform.position).normalized;
+        Vector3 direction = (target - carPositions[carId]).normalized;
         Quaternion targetRotation = Quaternion.LookRotation(direction);
 
-        car.transform.rotation = Quaternion.RotateTowards(car.transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-        car.transform.position = Vector3.MoveTowards(car.transform.position, target, moveSpeed * Time.deltaTime);
+        carRotations[carId] = Quaternion.RotateTowards(carRotations[carId], targetRotation, rotationSpeed * Time.deltaTime);
+        carPositions[carId] = Vector3.MoveTowards(carPositions[carId], target, moveSpeed * Time.deltaTime);
     }
 }
 
