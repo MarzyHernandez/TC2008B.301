@@ -1,6 +1,6 @@
 from mesa import Agent
 import random
-from map.map import PARKINGS, DIRECTIONS, DOORS, DOOR_GROUPS
+from map.map import PARKINGS, DIRECTIONS, DOORS, DOOR_GROUPS, DIRECTIONS_MAP
 
 
 class CarAgent(Agent):
@@ -36,52 +36,59 @@ class CarAgent(Agent):
         if hasattr(self.model, "reserved_positions") and pos in self.model.reserved_positions:
             self.model.reserved_positions.remove(pos)
 
+
     def can_advance_at_light(self, pos):
+        """Permite avanzar solo si la celda está controlada por un semáforo en verde."""
         cell_agents = self.model.grid.get_cell_list_contents(pos)
-        traffic_lights = [agent for agent in cell_agents if isinstance(agent, TrafficLightAgent)]
-        if not traffic_lights:
-            return True  
-
-        for light in traffic_lights:
-            x, y = light.position
-            adjacent_positions = [
-                (x + 1, y), (x - 1, y),
-                (x, y + 1), (x, y - 1)
-            ]
-            semaforo_positions = [pos for pos in adjacent_positions if self.within_grid(pos)]
-            semaforo_positions.append(light.position)
-
-            for semaforo_pos in semaforo_positions:
-                if any(isinstance(agent, PedestrianAgent) for agent in self.model.grid.get_cell_list_contents(semaforo_pos)):
-                    print(f"Carro {self.unique_id} detenido: Peatón en semáforo en {semaforo_pos}.")
+        for agent in cell_agents:
+            if isinstance(agent, TrafficLightAgent):
+                # Verificar si la posición está controlada por este semáforo y su estado es verde
+                if pos in agent.green_positions + agent.red_positions and agent.state == "green":
+                    return True
+                # Si la posición está controlada y el semáforo está en rojo, no se puede avanzar
+                if pos in agent.green_positions + agent.red_positions and agent.state == "red":
+                    print(f"Carro {self.unique_id} detenido: semáforo en rojo en {pos}.")
                     return False
 
+        # Si no hay semáforos que controlen esta celda, se permite avanzar
         return True
 
+
     def can_move_to(self, pos):
+        """Verifica si el auto puede moverse a la posición dada."""
+        # Verificar semáforos
         if not self.can_advance_at_light(pos):
             return False
 
+        # Verificar si hay peatones en celdas controladas por semáforos
+        cell_agents = self.model.grid.get_cell_list_contents(pos)
+        for agent in cell_agents:
+            if isinstance(agent, TrafficLightAgent):
+                # Combinar posiciones controladas por el semáforo
+                controlled_positions = agent.green_positions + agent.red_positions
+                for controlled_pos in controlled_positions:
+                    controlled_cell_agents = self.model.grid.get_cell_list_contents(controlled_pos)
+                    if any(isinstance(a, PedestrianAgent) for a in controlled_cell_agents):
+                        print(f"Carro {self.unique_id} detenido: peatón en semáforo en {controlled_pos}.")
+                        return False
+
+        # Verificar reservas de posición
         if hasattr(self.model, "reserved_positions") and pos in self.model.reserved_positions:
             print(f"Carro {self.unique_id} no puede moverse a {pos}: ya está reservado.")
             return False
 
+        # Verificar ocupación de celdas
         if self.model.grid.is_cell_empty(pos):
             return True
 
-        cell_agents = self.model.grid.get_cell_list_contents(pos)
         if any(isinstance(agent, PedestrianAgent) for agent in cell_agents):
             print(f"Carro {self.unique_id} esperando porque hay peatón en {pos}.")
             return False
 
-        for agent in cell_agents:
-            if isinstance(agent, TrafficLightAgent):
-                if agent.state == "green":
-                    return True
-                elif agent.state == "yellow":
-                    return random.choice([True, False])
+        return True
 
-        return False
+
+
 
     def detect_congestion(self):
         """
@@ -174,6 +181,20 @@ class CarAgent(Agent):
             moves.append((x - 1, y - 1))
 
         return moves
+    
+    def wants_to_cross(self, traffic_light_pos):
+        """El carro desea cruzar si su destino está más allá del semáforo."""
+        return self.distance_to_destination(traffic_light_pos) <= self.detection_distance
+
+    def estimate_steps(self, traffic_light_pos):
+        """Calcula pasos estimados hacia el semáforo."""
+        return abs(self.pos[0] - traffic_light_pos[0]) + abs(self.pos[1] - traffic_light_pos[1])
+
+    def nearby_count(self, traffic_light_pos):
+        """Cuenta agentes cercanos en el área del semáforo."""
+        neighbors = self.model.grid.get_neighbors(traffic_light_pos, moore=False, include_center=False, radius=1)
+        return sum(1 for agent in neighbors if isinstance(agent, CarAgent))
+
 
     def move(self):
         if self.has_arrived:
@@ -212,6 +233,13 @@ class CarAgent(Agent):
             weight = 1 / (self.visited_routes.get(move, {"count": 1})["count"])  # Menos peso para rutas ya visitadas
             if self.detect_congestion():
                 weight *= 0.5  # Reducir peso si hay congestión
+
+            # Reducir peso para movimientos diagonales (cambio de carril)
+            dx, dy = move[0] - self.pos[0], move[1] - self.pos[1]
+            if (dx, dy) in [(1, 1), (-1, 1), (1, -1), (-1, -1)]:
+                print(f"Reduciendo peso para movimiento diagonal: {self.pos} -> {move}")
+                weight *= 0.0001  # Prioridad extremadamente baja para cambios de carril
+
             weighted_moves.append((move, weight))
 
         chosen_move = random.choices(
@@ -252,8 +280,6 @@ class CarAgent(Agent):
             return
 
         self.move()
-
-
 
 class PedestrianAgent(Agent):
     def __init__(self, unique_id, model, color="orange"):
@@ -296,7 +322,6 @@ class PedestrianAgent(Agent):
             if door_id in doors:
                 return group
         return None
-
 
     def get_valid_moves(self):
         """
@@ -392,38 +417,118 @@ class PedestrianAgent(Agent):
 
         self.is_crossing = True
         print(f"Peatón {self.unique_id} inicia cruce hacia: {self.crossing_path[0]}")
+    
+    def wants_to_cross(self, traffic_light_pos):
+        """El peatón desea cruzar si está cerca de su destino."""
+        return self.estimate_steps(traffic_light_pos) <= 2
+
+    def estimate_steps(self, traffic_light_pos):
+        """Calcula pasos estimados hacia el semáforo."""
+        return abs(self.pos[0] - traffic_light_pos[0]) + abs(self.pos[1] - traffic_light_pos[1])
+
+    def nearby_count(self, traffic_light_pos):
+        """Cuenta peatones cercanos al semáforo."""
+        neighbors = self.model.grid.get_neighbors(traffic_light_pos, moore=False, include_center=False, radius=1)
+        return sum(1 for agent in neighbors if isinstance(agent, PedestrianAgent))
 
     def step(self):
         """Moverse cada 2 pasos."""
         if self.model.schedule.steps % 2 == 0:  # Moverse cada 2 pasos
             self.move()
 
-
-
 class TrafficLightAgent(Agent):
-    def __init__(self, unique_id, model, position, green_time=10, yellow_time=3, red_time=10, is_green=True):
+    def __init__(self, unique_id, model, red_positions, green_positions, green_time=10, yellow_time=3, red_time=10, is_green=False):
         super().__init__(unique_id, model)
-        self.position = position
+        self.red_positions = red_positions  # Coordenadas de las celdas rojas
+        self.green_positions = green_positions  # Coordenadas de las celdas verdes
         self.green_time = green_time
         self.yellow_time = yellow_time
         self.red_time = red_time
         self.state = "green" if is_green else "red"
         self.timer = self.green_time if is_green else self.red_time
+        self.cruce_partner = None  # Referencia al semáforo del cruce opuesto
+        self.proposals = []  # Propuestas recibidas
+
+        
+
+    def set_partner(self, partner):
+        """Configura el semáforo opuesto del mismo cruce."""
+        self.cruce_partner = partner
+
+    def solicit_proposals(self):
+        """Solicita propuestas a los agentes cercanos a las posiciones del semáforo."""
+        self.proposals = []
+        all_positions = self.red_positions + self.green_positions
+        for pos in all_positions:
+            nearby_agents = self.model.grid.get_neighbors(pos, moore=False, include_center=False, radius=3)
+            for agent in nearby_agents:
+                if isinstance(agent, (CarAgent, PedestrianAgent)) and agent.wants_to_cross(pos):
+                    proposal = {
+                        "agent": agent,
+                        "steps": agent.estimate_steps(pos),
+                        "type": "vehicle" if isinstance(agent, CarAgent) else "pedestrian",
+                        "nearby_count": agent.nearby_count(pos)
+                    }
+                    self.proposals.append(proposal)
+
+        # Debug: imprime propuestas recibidas
+        if self.proposals:
+            print(f"Semáforo {self.unique_id} recibió las siguientes propuestas:")
+            for p in self.proposals:
+                print(f"  - Agente {p['agent'].unique_id}, tipo: {p['type']}, pasos: {p['steps']}, adyacentes: {p['nearby_count']}")
+
+    def evaluate_proposals(self):
+        """Selecciona la mejor propuesta basada en las prioridades."""
+        if not self.proposals:
+            return None
+
+        # Prioridad para vehículos si hay al menos 3 con 1-2 adyacentes
+        car_priority = sum(
+            1 for p in self.proposals if p["type"] == "vehicle" and 1 <= p["nearby_count"] <= 2
+        ) >= 3
+        if car_priority:
+            sorted_proposals = sorted(
+                [p for p in self.proposals if p["type"] == "vehicle"],
+                key=lambda p: (p["steps"], -p["nearby_count"])
+            )
+        else:
+            # Prioridad general: menor tiempo, más adyacentes, peatones primero
+            sorted_proposals = sorted(
+                self.proposals,
+                key=lambda p: (p["steps"], -p["nearby_count"], 1 if p["type"] == "pedestrian" else 2)
+            )
+        return sorted_proposals[0]
 
     def change_color(self):
+        """Cambia el estado del semáforo y sincroniza con el del cruce opuesto."""
         if self.state == "green":
             self.state = "yellow"
             self.timer = self.yellow_time
+            print(f"Semáforo {self.unique_id} cambia a amarillo.")
         elif self.state == "yellow":
             self.state = "red"
             self.timer = self.red_time
+            print(f"Semáforo {self.unique_id} cambia a rojo.")
+            # Cambiar al semáforo opuesto a verde
+            if self.cruce_partner:
+                self.cruce_partner.state = "green"
+                self.cruce_partner.timer = self.cruce_partner.green_time
+                print(f"Semáforo opuesto {self.cruce_partner.unique_id} cambia a verde.")
         elif self.state == "red":
             self.state = "green"
             self.timer = self.green_time
+            print(f"Semáforo {self.unique_id} cambia a verde.")
+            # Cambiar al semáforo opuesto a rojo
+            if self.cruce_partner:
+                self.cruce_partner.state = "red"
+                self.cruce_partner.timer = self.cruce_partner.red_time
+                print(f"Semáforo opuesto {self.cruce_partner.unique_id} cambia a rojo.")
 
     def step(self):
+        """Reduce el temporizador y gestiona cambios de estado."""
         self.timer -= 1
         if self.timer <= 0:
+            self.solicit_proposals()
             self.change_color()
 
 

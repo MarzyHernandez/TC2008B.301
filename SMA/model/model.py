@@ -8,6 +8,7 @@ from map.map import BUILDINGS, SIDEWALKS, PARKINGS, TRAFFIC_LIGHTS_RED, TRAFFIC_
 class TrafficModel(Model):
     def __init__(self, width, height, agent_configs, num_pedestrians=5):
         self.door_positions = DOORS
+        self.blue_positions = set(BUILDINGS + SIDEWALKS)
 
         super().__init__()
         self.grid = MultiGrid(width, height, torus=False)
@@ -36,17 +37,41 @@ class TrafficModel(Model):
             glorieta = StaticAgent(f"glorieta_{i}", self, "glorieta", "brown")
             self.grid.place_agent(glorieta, pos)
 
-        # Agregar semáforos en rojo
-        for i, pos in enumerate(TRAFFIC_LIGHTS_RED):
-            traffic_light = TrafficLightAgent(f"traffic_light_red_{i}", self, pos, is_green=False)
-            self.schedule.add(traffic_light)
-            self.grid.place_agent(traffic_light, pos)
+        # Agregar semáforos por cruces (pares de rojo y verde)
+        num_traffic_lights = len(TRAFFIC_LIGHTS_RED) // 2
+        for i in range(num_traffic_lights):
+            red_positions = TRAFFIC_LIGHTS_RED[2 * i: 2 * i + 2]
+            green_positions = TRAFFIC_LIGHTS_GREEN[2 * i: 2 * i + 2]
 
-        # Agregar semáforos en verde
-        for i, pos in enumerate(TRAFFIC_LIGHTS_GREEN):
-            traffic_light = TrafficLightAgent(f"traffic_light_green_{i}", self, pos, is_green=True)
-            self.schedule.add(traffic_light)
-            self.grid.place_agent(traffic_light, pos)
+            # Crear semáforo rojo y verde como agentes separados
+            red_light = TrafficLightAgent(
+                unique_id=f"red_light_{i}",
+                model=self,
+                red_positions=red_positions,
+                green_positions=green_positions,
+                is_green=False
+            )
+            green_light = TrafficLightAgent(
+                unique_id=f"green_light_{i}",
+                model=self,
+                red_positions=red_positions,
+                green_positions=green_positions,
+                is_green=True
+            )
+
+            # Configurar relación de emparejamiento
+            red_light.set_partner(green_light)
+            green_light.set_partner(red_light)
+
+            # Añadir semáforos a la simulación
+            self.schedule.add(red_light)
+            self.schedule.add(green_light)
+
+            # Colocar los semáforos en las celdas correspondientes
+            for pos in red_positions:
+                self.grid.place_agent(red_light, pos)
+            for pos in green_positions:
+                self.grid.place_agent(green_light, pos)
 
         # Configurar agentes de carros
         for i, (start_pos, dest_pos) in enumerate(agent_configs):
@@ -74,7 +99,6 @@ class TrafficModel(Model):
                     pos = (building_pos[0] + dx, building_pos[1] + dy)
                     if pos not in SIDEWALKS and pos not in PARKINGS and pos in BUILDINGS:
                         self.inside_building_positions.append(pos)
-
 
     def step(self):
         self.schedule.step()

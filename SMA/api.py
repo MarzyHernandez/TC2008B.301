@@ -76,15 +76,22 @@ def get_lights():
 
     for agent in model.schedule.agents:
         if isinstance(agent, TrafficLightAgent):
-            x, y = agent.position
-
-            traffic_lights.append({
-                "id": f"{agent.state}_{x}_{y}", 
-                "position": [x, y],
-                "color": agent.state  
-            })
+            # Usar red_positions y green_positions directamente
+            for pos in agent.red_positions:
+                traffic_lights.append({
+                    "id": f"light_{pos[0]}_{pos[1]}",
+                    "position": [pos[0], pos[1]],
+                    "color": "red" if agent.state == "red" else "green"
+                })
+            for pos in agent.green_positions:
+                traffic_lights.append({
+                    "id": f"light_{pos[0]}_{pos[1]}",
+                    "position": [pos[0], pos[1]],
+                    "color": "green" if agent.state == "green" else "red"
+                })
 
     return jsonify(traffic_lights)
+
 
 # Función para cambiar el estado de los peatones
 @app.route('/getPeaton', methods=['GET'])
