@@ -543,3 +543,6 @@ class TrafficLightAgent(Agent):
 
 class StaticAgent(Agent):
     def __init__(self, unique_id, model, agent_type, color):
+        super().__init__(unique_id, model)
+        self.agent_type = agent_type  
+        self.color = color 
