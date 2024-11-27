@@ -68,35 +68,28 @@ def get_cars():
 
 # Función para obtener el estado de los semáforos
 @app.route('/getLights', methods=['GET'])
-def get_lights():
-    if model is None:
-        create_model()
+def getLights():
+   if model is None:
+       create_model()
 
-    lights = []
-    seen_positions = set()
-    for agent in model.schedule.agents:
-        if isinstance(agent, TrafficLightAgent):
-            # Obtener las posiciones del agente desde la cuadrícula
-            red_positions = agent.red_positions
-            green_positions = agent.green_positions
-            for pos in red_positions:
-                if tuple(pos) not in seen_positions:
-                    lights.append({
-                        'id': agent.unique_id,
-                        'color': 'red',
-                        'position': pos
-                    })
-                    seen_positions.add(tuple(pos))
-            for pos in green_positions:
-                if tuple(pos) not in seen_positions:
-                    lights.append({
-                        'id': agent.unique_id,
-                        'color': 'green',
-                        'position': pos
-                    })
-                    seen_positions.add(tuple(pos))
-    return jsonify(lights)
 
+   lights = []
+
+
+   for agent in model.schedule.agents:
+       if isinstance(agent, TrafficLightAgent):
+           x, y = agent.pos
+
+
+           light_data = {
+               "id": agent.unique_id,
+               "color": agent.state,
+               "position": [x, y]
+           }
+           lights.append(light_data)
+
+
+   return jsonify(lights)
 
 # Función para cambiar el estado de los peatones
 @app.route('/getPeaton', methods=['GET'])
