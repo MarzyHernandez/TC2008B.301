@@ -6,14 +6,13 @@ using UnityEngine.Networking;
 public class CarController : MonoBehaviour
 {
     private const string API_URL = "http://127.0.0.1:5003/getCarrosEscalado";
-    public GameObject carPrefab; // Prefab asignado desde el inspector
+    public List<GameObject> carPrefabs; // Prefab asignado desde el inspector
     private Dictionary<int, GameObject> cars = new Dictionary<int, GameObject>();
     private Dictionary<int, Queue<Vector3>> carPaths = new Dictionary<int, Queue<Vector3>>();
 
     private float moveSpeed = 20f;
     private float rotationSpeed = 200f; // Grados por segundo
 
-    
     void Start()
     {
         StartCoroutine(UpdateCarPositions());
@@ -40,7 +39,9 @@ public class CarController : MonoBehaviour
 
                             if (!cars.ContainsKey(carData.id))
                             {
-                                GameObject newCar = Instantiate(carPrefab, newPosition, Quaternion.identity);
+                                GameObject selectedPrefab = carPrefabs[Random.Range(0, carPrefabs.Count)];
+                                GameObject newCar = Instantiate(selectedPrefab, newPosition, Quaternion.identity);
+
                                 newCar.name = $"Car_{carData.id}";
                                 cars.Add(carData.id, newCar);
 
@@ -69,7 +70,6 @@ public class CarController : MonoBehaviour
                     Debug.LogError("Error fetching car positions: " + request.error);
                 }
             }
-
             yield return new WaitForSeconds(0.5f); // Llamada al API cada 0.5 segundos
         }
     }
