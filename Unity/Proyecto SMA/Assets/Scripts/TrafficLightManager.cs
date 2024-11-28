@@ -31,9 +31,25 @@ public class TrafficLightManager : MonoBehaviour
                 Debug.LogError($"Error al obtener datos del API: {request.error}");
             }
 
-            yield return new WaitForSeconds(0.3f); // Actualizar cada 0.7 segundos
+            yield return new WaitForSeconds(0.5f); // Actualizar cada 0.7 segundos
         }
     }
+
+    public bool CanVehiclePass(Vector2Int position)
+    {
+        foreach (var light in trafficLights)
+        {
+            foreach (var controlledPosition in light.controlledPositions)
+            {
+                if (controlledPosition == position && light.Red_Spot_Light.enabled)
+                {
+                    return false; // Detener el vehículo
+                }
+            }
+        }
+        return true; // Permitir el paso
+    }
+
 
     private void ProcessTrafficLightData(string json)
     {
@@ -70,7 +86,6 @@ public class TrafficLightManager : MonoBehaviour
 [System.Serializable]
 public class TrafficLight
 {
-    public string id;         // ID del semáforo
     public string color;      // Estado del semáforo (green, yellow, red)
     public int[] position;    // Posición del semáforo en el mapa
 }

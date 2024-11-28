@@ -16,11 +16,11 @@ public class TrafficLightController : MonoBehaviour
     // Posiciones controladas por este semáforo (pueden ser 1 o más)
     public Vector2Int[] controlledPositions;
 
-    public void UpdateTrafficLightState(string state)
+    public void UpdateTrafficLightState(string color)
     {
-        Debug.Log($"Cambiando estado del semáforo en {controlledPositions[0]} a {state}");
+        Debug.Log($"Cambiando estado del semáforo en {controlledPositions[0]} a {color}");
 
-        switch (state.ToLower())
+        switch (color.ToLower())
         {
             case "green":
                 SetVehicleLightStates(true, false, false);
@@ -38,7 +38,7 @@ public class TrafficLightController : MonoBehaviour
                 break;
 
             default:
-                Debug.LogWarning($"Estado desconocido para el semáforo en {controlledPositions[0]}: {state}");
+                Debug.LogWarning($"Estado desconocido para el semáforo en {controlledPositions[0]}: {color}");
                 break;
         }
     }
