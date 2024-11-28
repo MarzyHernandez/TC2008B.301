@@ -9,8 +9,7 @@ public class CarController : MonoBehaviour
     public List<GameObject> carPrefabs; // Prefab asignado desde el inspector
     private Dictionary<int, GameObject> cars = new Dictionary<int, GameObject>();
     private Dictionary<int, Queue<Vector3>> carPaths = new Dictionary<int, Queue<Vector3>>();
-    private Dictionary<int, Vector3> carPositions = new Dictionary<int, Vector3>();
-    private Dictionary<int, Quaternion> carRotations = new Dictionary<int, Quaternion>();
+    private Dictionary<int, Matrix4x4> carTransforms = new Dictionary<int, Matrix4x4>(); // Transformaciones homogéneas
 
     private float moveSpeed = 20f;
     private float rotationSpeed = 200f; // Grados por segundo
@@ -47,8 +46,8 @@ public class CarController : MonoBehaviour
                                 newCar.name = $"Car_{carData.id}";
                                 cars.Add(carData.id, newCar);
 
-                                carPositions[carData.id] = newPosition;
-                                carRotations[carData.id] = Quaternion.identity;
+                                Matrix4x4 initialTransform = VecOps.TranslateM(newPosition);
+                                carTransforms[carData.id] = initialTransform;
 
                                 Queue<Vector3> path = new Queue<Vector3>();
                                 path.Enqueue(newPosition);
@@ -90,11 +89,10 @@ public class CarController : MonoBehaviour
             {
                 Vector3 currentTarget = carPaths[carId].Peek();
 
-                if (Vector3.Distance(carPositions[carId], currentTarget) > 0.1f)
+                if (Vector3.Distance(carTransforms[carId].MultiplyPoint3x4(Vector3.zero), currentTarget) > 0.1f)
                 {
                     MoveCarTowards(carId, currentTarget);
-                    car.transform.position = carPositions[carId]; // Actualiza la posición real del objeto en la escena
-                    car.transform.rotation = carRotations[carId]; // Actualiza la rotación real del objeto en la escena
+                    ApplyTransform(carId, car); // Actualiza la posición y rotación reales del objeto en la escena
                 }
                 else
                 {
@@ -107,11 +105,35 @@ public class CarController : MonoBehaviour
 
     private void MoveCarTowards(int carId, Vector3 target)
     {
-        Vector3 direction = (target - carPositions[carId]).normalized;
-        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        Vector3 currentPos = carTransforms[carId].MultiplyPoint3x4(Vector3.zero);
+        Vector3 direction = (target - currentPos).normalized;
 
-        carRotations[carId] = Quaternion.RotateTowards(carRotations[carId], targetRotation, rotationSpeed * Time.deltaTime);
-        carPositions[carId] = Vector3.MoveTowards(carPositions[carId], target, moveSpeed * Time.deltaTime);
+        Matrix4x4 translation = VecOps.TranslateM(Vector3.MoveTowards(currentPos, target, moveSpeed * Time.deltaTime));
+
+        Vector3 forward = carTransforms[carId].MultiplyVector(Vector3.forward);
+        Vector3 newForward = Vector3.RotateTowards(forward, direction, Mathf.Deg2Rad * rotationSpeed * Time.deltaTime, 0f).normalized;
+
+        Vector3 right = Vector3.Cross(Vector3.up, newForward).normalized;
+        Vector3 up = Vector3.Cross(newForward, right);
+
+        Matrix4x4 rotation = new Matrix4x4();
+        rotation.SetColumn(0, new Vector4(right.x, right.y, right.z, 0));
+        rotation.SetColumn(1, new Vector4(up.x, up.y, up.z, 0));
+        rotation.SetColumn(2, new Vector4(newForward.x, newForward.y, newForward.z, 0));
+        rotation.SetColumn(3, new Vector4(0, 0, 0, 1));
+
+        carTransforms[carId] = translation * rotation; // Combinación de traslación y rotación
+    }
+
+    private void ApplyTransform(int carId, GameObject car)
+    {
+        Matrix4x4 transform = carTransforms[carId];
+        car.transform.localPosition = transform.MultiplyPoint3x4(Vector3.zero);
+
+        Vector3 forward = transform.GetColumn(2);
+        Vector3 up = transform.GetColumn(1);
+
+        car.transform.localRotation = Quaternion.LookRotation(forward, up);
     }
 }
 
