@@ -12,7 +12,7 @@ public class CarController : MonoBehaviour
     private Dictionary<int, Matrix4x4> carTransforms = new Dictionary<int, Matrix4x4>(); // Transformaciones homogéneas
 
     private float moveSpeed = 20f;
-    private float rotationSpeed = 200f; // Grados por segundo
+    private float rotationSpeed = 200f; 
 
     void Start()
     {
@@ -74,7 +74,7 @@ public class CarController : MonoBehaviour
                     Debug.LogError("Error fetching car positions: " + request.error);
                 }
             }
-            yield return new WaitForSeconds(0.5f); // Llamada al API cada 0.5 segundos
+            yield return new WaitForSeconds(0.5f); 
         }
     }
 
@@ -89,13 +89,12 @@ public class CarController : MonoBehaviour
             {
                 Vector3 currentTarget = carPaths[carId].Peek();
 
-                // Usar una posición posterior para orientación si hay suficientes puntos
                 Vector3? orientationTarget = GetOrientationTarget(carPaths[carId]);
 
                 if (Vector3.Distance(carTransforms[carId].MultiplyPoint3x4(Vector3.zero), currentTarget) > 0.1f)
                 {
                     MoveCarTowards(carId, currentTarget, orientationTarget);
-                    ApplyTransform(carId, car); // Actualiza la posición y rotación reales del objeto en la escena
+                    ApplyTransform(carId, car); 
                 }
                 else
                 {
@@ -111,7 +110,6 @@ public class CarController : MonoBehaviour
         Vector3 currentPos = carTransforms[carId].MultiplyPoint3x4(Vector3.zero);
         Vector3 direction = (target - currentPos).normalized;
 
-        // Orientar hacia el objetivo de orientación si existe, de lo contrario, hacia el objetivo actual
         Vector3 lookAtDirection = orientationTarget.HasValue
             ? (orientationTarget.Value - currentPos).normalized
             : direction;
@@ -130,7 +128,7 @@ public class CarController : MonoBehaviour
         rotation.SetColumn(2, new Vector4(newForward.x, newForward.y, newForward.z, 0));
         rotation.SetColumn(3, new Vector4(0, 0, 0, 1));
 
-        carTransforms[carId] = translation * rotation; // Combinación de traslación y rotación
+        carTransforms[carId] = translation * rotation; 
     }
 
     private void ApplyTransform(int carId, GameObject car)
@@ -149,7 +147,7 @@ public class CarController : MonoBehaviour
         if (path.Count > 2)
         {
             Vector3[] points = path.ToArray();
-            return points[2]; // Usar la tercera posición como objetivo de orientación
+            return points[2];
         }
         return null;
     }
