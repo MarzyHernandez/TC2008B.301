@@ -13,6 +13,7 @@ public class CarController : MonoBehaviour
 
     private float moveSpeed = 20f;
     private float rotationSpeed = 200f; 
+    private float distanceThresholdSquared = 0.1f * 0.1f; // Usamos el cuadrado de 0.1 para evitar la raíz cuadrada
 
     void Start()
     {
@@ -91,7 +92,7 @@ public class CarController : MonoBehaviour
 
                 Vector3? orientationTarget = GetOrientationTarget(carPaths[carId]);
 
-                if (Vector3.Distance(carTransforms[carId].MultiplyPoint3x4(Vector3.zero), currentTarget) > 0.1f)
+                if (CalculateSquaredDistance(carTransforms[carId].MultiplyPoint3x4(Vector3.zero), currentTarget) > distanceThresholdSquared)
                 {
                     MoveCarTowards(carId, currentTarget, orientationTarget);
                     ApplyTransform(carId, car); 
@@ -150,6 +151,12 @@ public class CarController : MonoBehaviour
             return points[2];
         }
         return null;
+    }
+
+    private float CalculateSquaredDistance(Vector3 a, Vector3 b)
+    {
+        Vector3 diff = a - b;
+        return diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
     }
 }
 
