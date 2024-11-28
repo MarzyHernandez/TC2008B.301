@@ -89,9 +89,12 @@ public class CarController : MonoBehaviour
             {
                 Vector3 currentTarget = carPaths[carId].Peek();
 
+                // Usar una posición posterior para orientación si hay suficientes puntos
+                Vector3? orientationTarget = GetOrientationTarget(carPaths[carId]);
+
                 if (Vector3.Distance(carTransforms[carId].MultiplyPoint3x4(Vector3.zero), currentTarget) > 0.1f)
                 {
-                    MoveCarTowards(carId, currentTarget);
+                    MoveCarTowards(carId, currentTarget, orientationTarget);
                     ApplyTransform(carId, car); // Actualiza la posición y rotación reales del objeto en la escena
                 }
                 else
@@ -103,15 +106,20 @@ public class CarController : MonoBehaviour
         }
     }
 
-    private void MoveCarTowards(int carId, Vector3 target)
+    private void MoveCarTowards(int carId, Vector3 target, Vector3? orientationTarget)
     {
         Vector3 currentPos = carTransforms[carId].MultiplyPoint3x4(Vector3.zero);
         Vector3 direction = (target - currentPos).normalized;
 
+        // Orientar hacia el objetivo de orientación si existe, de lo contrario, hacia el objetivo actual
+        Vector3 lookAtDirection = orientationTarget.HasValue
+            ? (orientationTarget.Value - currentPos).normalized
+            : direction;
+
         Matrix4x4 translation = VecOps.TranslateM(Vector3.MoveTowards(currentPos, target, moveSpeed * Time.deltaTime));
 
         Vector3 forward = carTransforms[carId].MultiplyVector(Vector3.forward);
-        Vector3 newForward = Vector3.RotateTowards(forward, direction, Mathf.Deg2Rad * rotationSpeed * Time.deltaTime, 0f).normalized;
+        Vector3 newForward = Vector3.RotateTowards(forward, lookAtDirection, Mathf.Deg2Rad * rotationSpeed * Time.deltaTime, 0f).normalized;
 
         Vector3 right = Vector3.Cross(Vector3.up, newForward).normalized;
         Vector3 up = Vector3.Cross(newForward, right);
@@ -134,6 +142,16 @@ public class CarController : MonoBehaviour
         Vector3 up = transform.GetColumn(1);
 
         car.transform.localRotation = Quaternion.LookRotation(forward, up);
+    }
+
+    private Vector3? GetOrientationTarget(Queue<Vector3> path)
+    {
+        if (path.Count > 2)
+        {
+            Vector3[] points = path.ToArray();
+            return points[2]; // Usar la tercera posición como objetivo de orientación
+        }
+        return null;
     }
 }
 
