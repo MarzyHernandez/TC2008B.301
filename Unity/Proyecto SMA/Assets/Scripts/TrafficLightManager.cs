@@ -31,11 +31,11 @@ public class TrafficLightManager : MonoBehaviour
                 Debug.LogError($"Error al obtener datos del API: {request.error}");
             }
 
-            yield return new WaitForSeconds(0.4f); // Actualizar cada 0.7 segundos
+            yield return new WaitForSeconds(0.1f); // Actualizar cada 0.7 segundos
         }
     }
 
-    public bool CanVehiclePass(Vector2Int position)
+/*    public bool CanVehiclePass(Vector2Int position)
     {
         foreach (var light in trafficLights)
         {
@@ -48,7 +48,7 @@ public class TrafficLightManager : MonoBehaviour
             }
         }
         return true; // Permitir el paso
-    }
+    }*/
 
 
     private void ProcessTrafficLightData(string json)
@@ -62,15 +62,11 @@ public class TrafficLightManager : MonoBehaviour
                 // Convierte la posición del JSON en Vector2Int
                 Vector2Int apiPosition = new Vector2Int(apiLight.position[0], apiLight.position[1]);
 
-                foreach (var controlledPosition in light.controlledPositions)
+                // Si la posición coincide, actualiza el estado
+                if (light.controlledPosition == apiPosition)
                 {
-                    // Si una posición controlada coincide con una posición del JSON, actualiza el estado
-                    if (controlledPosition == apiPosition)
-                    {
-                        Debug.Log($"Actualizando semáforo en posición {controlledPosition} con estado {apiLight.color}");
-                        light.UpdateTrafficLightState(apiLight.color);
-                        break;
-                    }
+                    Debug.Log($"Actualizando semáforo en posición {light.controlledPosition} con estado {apiLight.color}");
+                    light.UpdateTrafficLightState(apiLight.color);
                 }
             }
         }
@@ -86,6 +82,7 @@ public class TrafficLightManager : MonoBehaviour
 [System.Serializable]
 public class TrafficLight
 {
+    public string id;         // ID del semáforo
     public string color;      // Estado del semáforo (green, yellow, red)
     public int[] position;    // Posición del semáforo en el mapa
 }
