@@ -362,6 +362,7 @@
 -analyzer:"/Applications/Unity/Hub/Editor/2022.3.51f1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 "Assets/Scripts/CamFollow.cs"
 "Assets/Scripts/CarController.cs"
+"Assets/Scripts/DayNightCycle.cs"
 "Assets/Scripts/PedestrianManager.cs"
 "Assets/Scripts/TrafficLightController.cs"
 "Assets/Scripts/TrafficLightManager.cs"
